@@ -21,7 +21,7 @@ function isAuthorized(request: Request) {
   return allowed.includes(auth);
 }
 
-export async function performSync(request: Request) {
+async function performSync(request: Request) {
   if (!config.password && !config.cronSecret) return missingPassword();
   if (!isAuthorized(request)) return unauthorized();
 

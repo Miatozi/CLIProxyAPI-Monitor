@@ -1,4 +1,4 @@
-// Cloudflare Worker 定时触发 CLIProxy 使用数据同步
+// Cloudflare Worker 定时触发 CLIProxyAPI 上游数据同步
 // 部署到 CF Worker 后，配置 Cron 触发（如 */15 * * * *）
 // 可使用环境变量：DASHBOARD_URL、PASSWORD（或 CLIPROXY_SECRET_KEY）或直接修改下方常量
 
