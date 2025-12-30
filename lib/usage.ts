@@ -13,7 +13,8 @@ const tokensSchema = z.object({
 const detailSchema = z.object({
   timestamp: z.string().optional(),
   source: z.string().optional(),
-  auth_index: z.number().optional(),
+  // auth_index may arrive as a numeric string; coerce to number to keep type stable
+  auth_index: z.coerce.number().optional(),
   tokens: tokensSchema.optional(),
   failed: z.boolean().optional(),
   // 兼容旧格式
