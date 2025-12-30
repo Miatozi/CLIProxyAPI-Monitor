@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, ReferenceLine, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis } from "recharts";
 import { formatCompactNumber, formatNumberWithCommas } from "@/lib/utils";
 
 type ExplorePoint = {
@@ -23,21 +23,27 @@ type ExploreResponse = {
   error?: string;
 };
 
-// 高对比度明亮色卡 - 确保任意相邻颜色都有明显区分
-// 精选 12 色，使用更明亮的色调以适应暗色主题，每个颜色唯一
+// 高对比度明亮色卡 - 20 色高饱和高明度，确保各色间强区分
+// 按色相分布均匀，饱和度 70-90%，明度 55-75%，适配暗色主题
+// 排序优化：按 1,3,5,7,9,2,4,6,8,10 交叉排列，最大化相邻颜色差异
 const MODEL_COLORS = [
-  "#ff6b6b", // 亮红
-  "#4ecdc4", // 青绿
-  "#ffe66d", // 亮黄
-  "#a29bfe", // 淡紫
-  "#55efc4", // 薄荷绿
-  "#fd79a8", // 粉红
-  "#74b9ff", // 天蓝
-  "#ffeaa7", // 奶黄
-  "#dfe6e9", // 浅灰蓝
-  "#e17055", // 珊瑚橙
-  "#00cec9", // 亮青
-  "#6c5ce7", // 靛紫
+  "#ff7a7aff", // 14 玫红 (345°)
+  "#ffe863ff", // 3 橙黄 (40°)
+  "#8df48dff", // 6 绿 (120°)
+  "#72afffff", // 9 蓝 (220°)
+  "#a582ff", // 11 紫 (270°)
+  "#ff76d1ff", // 13 品红 (320°)
+  "#ffb3b3", // 15 浅红 (0°+)
+  "#fff899", // 17 浅黄 (60°+)
+  "#99e6ff", // 19 浅蓝 (200°+)
+  "#ff8c42", // 2 橙红 (20°)
+  "#ffe66d", // 4 黄 (60°)
+  "#42c9f5", // 8 天青 (195°)
+  "#7d7aff", // 10 靛蓝 (245°)
+  "#d97aff", // 12 品红紫 (290°)
+  "#ffd699", // 16 浅橙 (40°+)
+  "#b3f5b3", // 18 浅绿 (120°+)
+  "#d9b3ff", // 20 浅紫 (280°+)
 ];
 
 const TOKEN_COLORS = {
@@ -54,7 +60,7 @@ function clamp(num: number, min: number, max: number) {
 }
 
 // 添加小范围的 padding 使边缘点完整显示
-function niceDomain([min, max]: [number, number], paddingRatio = 0.02): [number, number] {
+function niceDomain([min, max]: [number, number], paddingRatio = 0.01): [number, number] {
   if (!Number.isFinite(min) || !Number.isFinite(max)) return [0, 1];
   if (min === max) return [min - 1, max + 1];
   const range = max - min;
@@ -68,7 +74,7 @@ function niceYDomain([min, max]: [number, number], paddingRatio = 0.02): [number
   if (min === max) return [min - 1, max + 1];
   const range = max - min;
   const topPadding = range * paddingRatio;
-  return [Math.max(0, min), max + topPadding];
+  return [min - topPadding / 2, max + topPadding];
 }
 
 const timeFormatter = new Intl.DateTimeFormat("zh-CN", {
@@ -381,7 +387,7 @@ export default function ExplorePage() {
       
       // 缩放后点变大
       const baseRadius = zoomDomain ? 5 : 3;
-      const radius = isHighlighted ? baseRadius + 2 : baseRadius;
+      const radius = isHighlighted ? baseRadius + 1 : baseRadius;
       
       return (
         <circle 
@@ -389,9 +395,9 @@ export default function ExplorePage() {
           cy={cy} 
           r={radius} 
           fill={fill} 
-          fillOpacity={highlightedModel && !isHighlighted ? 0.15 : 0.6}
-          stroke={isHighlighted ? "#fff" : "none"}
-          strokeWidth={isHighlighted ? 1 : 0}
+          fillOpacity={highlightedModel && !isHighlighted ? 0.15 : 0.68}
+          stroke={isHighlighted ? "#ffffffce" : "none"}
+          strokeWidth={isHighlighted ? 1.2 : 0}
         />
       );
     };
@@ -418,8 +424,8 @@ export default function ExplorePage() {
     });
   }, []);
 
-  return (
-    <main className="min-h-screen bg-slate-900 px-6 py-8 text-slate-100">
+    return (
+      <main className="min-h-screen bg-slate-900 px-6 py-8 text-slate-100">
       <header className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">数据探索</h1>
@@ -448,7 +454,7 @@ export default function ExplorePage() {
             <button
               type="button"
               onClick={resetZoom}
-              className="rounded-lg bg-slate-700 px-3 py-1 text-xs text-slate-200 transition-colors hover:bg-slate-600"
+              className="rounded-lg bg-slate-600/90 px-3 py-1 text-xs text-slate-100 transition-colors hover:bg-slate-500"
             >
               重置缩放
             </button>
@@ -462,21 +468,21 @@ export default function ExplorePage() {
               <span className="text-slate-400">颜色区分模型（悬停高亮，点击隐藏）</span>
             </div>
             <div className="mt-2 max-h-20 overflow-auto pr-1">
-              <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-300">
+              <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-300">
                 {models.map((m) => {
                   const isHidden = hiddenModels.has(m);
                   return (
                     <button
                       key={m}
                       type="button"
-                      className={`flex items-center gap-2 rounded-md px-1.5 py-0.5 transition-all hover:bg-slate-700/50 ${isHidden ? 'opacity-40' : ''}`}
+                      className={`flex items-center gap-2 rounded-md px-1.5 py-0.5 transition-all hover:bg-slate-600/40 ${isHidden ? 'opacity-40' : ''}`}
                       onMouseEnter={() => handleLegendMouseEnter(m)}
                       onMouseLeave={handleLegendMouseLeave}
                       onClick={() => handleLegendClick(m)}
                     >
                       <span 
                         className={`h-2.5 w-2.5 rounded-full ${isHidden ? 'ring-1 ring-slate-500' : ''}`} 
-                        style={{ backgroundColor: isHidden ? 'transparent' : getModelColor(m), opacity: isHidden ? 1 : 0.7 }} 
+                        style={{ backgroundColor: isHidden ? 'transparent' : getModelColor(m), opacity: isHidden ? 1 : 0.8 }} 
                       />
                       <span className={`max-w-[18rem] truncate ${isHidden ? 'line-through' : ''}`}>{m}</span>
                     </button>
@@ -492,13 +498,13 @@ export default function ExplorePage() {
             <Skeleton className="h-full" />
           ) : error ? (
             <div className="flex h-full flex-col items-center justify-center rounded-xl border border-dashed border-slate-700 bg-slate-900/30 text-center">
-              <p className="text-base text-slate-300">加载失败</p>
-              <p className="mt-1 text-sm text-slate-500">{error}</p>
+                  <p className="text-base text-slate-200">加载失败</p>
+                  <p className="mt-1 text-sm text-slate-400">{error}</p>
             </div>
           ) : points.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center rounded-xl border border-dashed border-slate-700 bg-slate-900/30 text-center">
-              <p className="text-base text-slate-300">暂无请求明细数据</p>
-              <p className="mt-1 text-sm text-slate-500">如果上游 /usage 未提供 details，此图会为空。</p>
+                  <p className="text-base text-slate-200">暂无请求明细数据</p>
+                  <p className="mt-1 text-sm text-slate-400">如果上游 /usage 未提供 details，此图会为空。</p>
             </div>
           ) : (
             <div className="relative flex h-full gap-0">
@@ -519,18 +525,18 @@ export default function ExplorePage() {
                     <defs>
                       <linearGradient id="yDistGradient" x1="1" y1="0" x2="0" y2="0">
                         <stop offset="0%" stopColor="#60a5fa" stopOpacity={0.08} />
-                        <stop offset="40%" stopColor="#60a5fa" stopOpacity={0.3} />
-                        <stop offset="100%" stopColor="#60a5fa" stopOpacity={0.5} />
+                        <stop offset="40%" stopColor="#60a5fa" stopOpacity={0.4} />
+                        <stop offset="100%" stopColor="#60a5fa" stopOpacity={0.7} />
                       </linearGradient>
                     </defs>
                     <XAxis type="number" hide domain={[0, 'dataMax']} reversed />
                     <YAxis type="category" dataKey="y" hide />
                     <Area 
                       type="basis" 
-                      dataKey="count" 
-                      stroke="#60a5fa" 
-                      strokeWidth={1.5}
-                      strokeOpacity={0.6}
+                        dataKey="count" 
+                        stroke="#7cc5ff" 
+                        strokeWidth={1.5}
+                        strokeOpacity={0.75}
                       fill="url(#yDistGradient)" 
                       isAnimationActive={false}
                     />
@@ -565,28 +571,32 @@ export default function ExplorePage() {
                 <ScatterChart 
                   margin={CHART_MARGIN}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                  <XAxis
-                    type="number"
-                    dataKey="ts"
-                    domain={activeDomain?.x}
-                    scale="time"
-                    tickFormatter={(v) => formatTs(Number(v))}
-                    stroke="#94a3b8"
-                    fontSize={12}
-                    allowDataOverflow
-                  />
-                  <YAxis
-                    type="number"
-                    dataKey="tokens"
-                    domain={activeDomain?.y}
-                    stroke="#94a3b8"
-                    fontSize={12}
-                    tickFormatter={(v) => formatCompactNumber(Number(v))}
-                    allowDataOverflow
-                  />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#64748b" />
+                    <XAxis
+                      type="number"
+                      dataKey="ts"
+                      domain={activeDomain?.x}
+                      scale="time"
+                      tickFormatter={(v) => formatTs(Number(v))}
+                      stroke="#cbd5e1"
+                      fontSize={13}
+                      allowDataOverflow
+                      axisLine={false}
+                    />
+                    <YAxis
+                      type="number"
+                      dataKey="tokens"
+                      domain={activeDomain?.y}
+                      stroke="#cbd5e1"
+                      fontSize={13}
+                      tickFormatter={(v) => {
+                        const num = Number(v);
+                        return num < 0 ? '' : formatCompactNumber(num);
+                      }}
+                      allowDataOverflow
+                    />
                   <Tooltip
-                    cursor={{ stroke: "rgba(148,163,184,0.25)", strokeWidth: 1 }}
+                    cursor={{ stroke: "rgba(148,163,184,0.3)", strokeWidth: 1 }}
                     isAnimationActive={false}
                     wrapperStyle={{ zIndex: 100, pointerEvents: "none" }}
                     content={({ active, payload }) => {
@@ -594,7 +604,7 @@ export default function ExplorePage() {
                       const p = payload[0].payload as ExplorePoint;
                       const modelColor = getModelColor(p.model || "");
                       return (
-                        <div className="rounded-xl bg-black/50 px-3 py-2 text-sm shadow-lg ring-1 ring-slate-700/60">
+                        <div className="rounded-xl bg-slate-900/75 px-3 py-2 text-sm shadow-lg ring-1 ring-slate-600/60">
                           <div className="font-semibold text-slate-100">{formatTs(p.ts)}</div>
                           <div className="mt-1 flex items-center gap-2 text-slate-200">
                             <span className="text-slate-400">模型：</span>
@@ -628,6 +638,13 @@ export default function ExplorePage() {
                         </div>
                       );
                     }}
+                  />
+                  <ReferenceLine 
+                    y={0} 
+                    stroke="#cbd5e1aa" 
+                    strokeWidth={1} 
+                    ifOverflow="extendDomain"
+                      label={{ value: "0", position: "left", fill: "#cbd5e1", fontSize: 13, offset: 6 }}
                   />
                   <Scatter data={filteredPoints} shape={dotShape} isAnimationActive={false} />
                 </ScatterChart>

@@ -849,6 +849,7 @@ export default function DashboardPage() {
                   <Tooltip 
                     contentStyle={{ borderRadius: 12, backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid rgba(100,116,139,0.6)", color: "#f8fafc" }}
                     formatter={trendTooltipFormatter}
+                    itemSorter={(item) => ({ requests: 0, tokens: 1, cost: 2 } as Record<string, number>)[item?.dataKey as string] ?? 999}
                   />
                   <TrendLegend 
                     height={24} 
@@ -1063,7 +1064,7 @@ export default function DashboardPage() {
             {loadingOverview ? (
               <Skeleton className="h-full rounded-xl" />
             ) : !overviewData || showEmpty ? (
-              <div className="flex h-full flex-col items-center justify-center rounded-xl border border-dashed border-slate-700 bg-slate-800/30 text-center">
+              <div className="flex h-full flex-col items-center justify-center rounded-xl border border-dashed border-slate-600 bg-slate-800/25 text-center">
                 <p className="text-base text-slate-400">暂无小时数据</p>
                 <p className="mt-1 text-sm text-slate-500">请先触发 /api/sync 同步数据</p>
               </div>
@@ -1078,6 +1079,7 @@ export default function DashboardPage() {
                     contentStyle={{ borderRadius: 12, backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid rgba(100,116,139,0.6)", color: "#f8fafc" }} 
                     formatter={numericTooltipFormatter}
                     labelFormatter={(label) => formatHourLabel(label)}
+                    itemSorter={(item) => ({ requests: 0, inputTokens: 1, outputTokens: 2, reasoningTokens: 3, cachedTokens: 4 } as Record<string, number>)[item?.dataKey as string] ?? 999}
                   />
                   <TrendLegend 
                     wrapperStyle={{ cursor: "pointer" }} 
