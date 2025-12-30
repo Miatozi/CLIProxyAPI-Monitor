@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef, type FormEvent } from "react";
 import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, BarChart, Bar, Legend, ComposedChart, PieChart, Pie, Cell } from "recharts";
+import type { TooltipProps } from "recharts";
 import { formatCurrency, formatNumber, formatCompactNumber, formatNumberWithCommas, formatHourLabel } from "@/lib/utils";
 import { AlertTriangle, Info, LucideIcon, Activity, Save, RefreshCw, Moon, Sun, Pencil, Trash2, X, Maximize2 } from "lucide-react";
 import type { ModelPrice, UsageOverview, UsageSeriesPoint } from "@/lib/types";
@@ -28,6 +29,24 @@ const hourFormatter = new Intl.DateTimeFormat("en-CA", {
 });
 
 const HOUR_MS = 60 * 60 * 1000;
+
+type TooltipValue = number | string | Array<number | string> | undefined;
+
+function normalizeTooltipValue(value: TooltipValue) {
+  if (Array.isArray(value)) return normalizeTooltipValue(value[0]);
+  const numeric = typeof value === "number" ? value : Number(value ?? 0);
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
+const trendTooltipFormatter: TooltipProps<number, string>["formatter"] = (value, name) => {
+  const numericValue = normalizeTooltipValue(value);
+  return name === "费用" ? [formatCurrency(numericValue), name] : [formatNumberWithCommas(numericValue), name];
+};
+
+const numericTooltipFormatter: TooltipProps<number, string>["formatter"] = (value, name) => {
+  const numericValue = normalizeTooltipValue(value);
+  return [formatNumberWithCommas(numericValue), name];
+};
 
 function formatHourKeyFromTs(ts: number) {
   const parts = hourFormatter.formatToParts(new Date(ts));
@@ -135,12 +154,69 @@ export default function DashboardPage() {
   };
 
   const handleHourlyLegendClick = (e: any) => {
-    const { dataKey } = e;
+    const key = e.dataKey ?? e.payload?.dataKey ?? e.id;
+    if (!key) return;
     setHourlyVisible((prev) => ({
       ...prev,
-      [dataKey]: !prev[dataKey as string],
+      [key]: !prev[key as string],
     }));
   };
+
+  const TrendLegend: any = Legend;
+
+  const trendConfig = useMemo(() => {
+    const defs = {
+      requests: { color: "#3b82f6", formatter: (v: any) => formatCompactNumber(v), name: "请求数" },
+      tokens: { color: "#10b981", formatter: (v: any) => formatCompactNumber(v), name: "Tokens" },
+      cost: { color: "#fbbf24", formatter: (v: any) => formatCurrency(v), name: "费用" },
+    };
+
+    const visibleKeys = (Object.keys(trendVisible) as Array<keyof typeof trendVisible>).filter((k) => trendVisible[k]);
+    
+    // Default mapping
+    let lineAxisMap: Record<string, string> = {
+      requests: "left",
+      tokens: "right",
+      cost: "cost",
+    };
+    
+    let leftAxisKey = "requests";
+    let rightAxisKey = "tokens";
+    let rightAxisVisible = true;
+
+    if (visibleKeys.length === 2) {
+      if (!trendVisible.requests) {
+        // requests hidden -> tokens (left), cost (right)
+        lineAxisMap = { requests: "left", tokens: "left", cost: "right" };
+        leftAxisKey = "tokens";
+        rightAxisKey = "cost";
+      } else if (!trendVisible.tokens) {
+        // tokens hidden -> requests (left), cost (right)
+        lineAxisMap = { requests: "left", tokens: "right", cost: "right" };
+        leftAxisKey = "requests";
+        rightAxisKey = "cost";
+      } else {
+        // cost hidden -> requests (left), tokens (right)
+        lineAxisMap = { requests: "left", tokens: "right", cost: "cost" };
+        leftAxisKey = "requests";
+        rightAxisKey = "tokens";
+      }
+    } else if (visibleKeys.length === 1) {
+      const key = visibleKeys[0];
+      lineAxisMap = { requests: "left", tokens: "left", cost: "left" };
+      leftAxisKey = key;
+      rightAxisVisible = false;
+    } else if (visibleKeys.length === 0) {
+       rightAxisVisible = false;
+    }
+
+    return {
+      lineAxisMap,
+      leftAxis: defs[leftAxisKey as keyof typeof defs],
+      rightAxis: defs[rightAxisKey as keyof typeof defs],
+      rightAxisVisible
+    };
+  }, [trendVisible]);
 
   const cancelPieLegendClear = useCallback(() => {
     if (pieLegendClearTimerRef.current !== null) {
@@ -717,13 +793,19 @@ export default function DashboardPage() {
                 <LineChart data={overviewData.byDay} margin={{ top: 0, right: 12, left: 0, bottom: 0 }}>
                   <CartesianGrid stroke="#334155" strokeDasharray="5 5" />
                   <XAxis dataKey="label" stroke="#94a3b8" fontSize={12} />
-                  <YAxis yAxisId="left" stroke="#3b82f6" tickFormatter={(v) => formatCompactNumber(v)} fontSize={12} />
+                  <YAxis 
+                    yAxisId="left" 
+                    stroke={trendConfig.leftAxis.color} 
+                    tickFormatter={trendConfig.leftAxis.formatter} 
+                    fontSize={12} 
+                  />
                   <YAxis
                     yAxisId="right"
                     orientation="right"
-                    stroke="#10b981"
-                    tickFormatter={(v) => formatCompactNumber(v)}
+                    stroke={trendConfig.rightAxis.color}
+                    tickFormatter={trendConfig.rightAxis.formatter}
                     fontSize={12}
+                    hide={!trendConfig.rightAxisVisible}
                   />
                   <YAxis
                     yAxisId="cost"
@@ -732,20 +814,22 @@ export default function DashboardPage() {
                     tickFormatter={(v) => formatCurrency(v)}
                     fontSize={12}
                     hide
+                    width={0}
                   />
                   <Tooltip 
                     contentStyle={{ borderRadius: 12, backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid rgba(100,116,139,0.6)", color: "#f8fafc" }}
-                    formatter={(value: number, name: string) => name === "费用" ? [formatCurrency(value), name] : [formatNumberWithCommas(value), name]}
+                    formatter={trendTooltipFormatter}
                   />
-                  <Legend 
+                  <TrendLegend 
                     height={24} 
                     iconSize={10} 
                     wrapperStyle={{ paddingTop: 0, paddingBottom: 0, lineHeight: "24px", cursor: "pointer" }} 
                     onClick={handleTrendLegendClick}
+                    itemSorter={(item: any) => ({ requests: 0, tokens: 1, cost: 2 } as Record<string, number>)[item?.dataKey] ?? 999}
                   />
-                  <Line hide={!trendVisible.requests} yAxisId="left" type="monotone" dataKey="requests" stroke="#3b82f6" strokeWidth={2} name="请求数" dot={{ r: 3 }} />
-                  <Line hide={!trendVisible.tokens} yAxisId="right" type="monotone" dataKey="tokens" stroke="#10b981" strokeWidth={2} name="Tokens" dot={{ r: 3 }} />
-                  <Line hide={!trendVisible.cost} yAxisId="cost" type="monotone" dataKey="cost" stroke="#fbbf24" strokeWidth={2} name="费用" dot={{ r: 3 }} />
+                  <Line hide={!trendVisible.requests} yAxisId={trendConfig.lineAxisMap.requests} type="monotone" dataKey="requests" stroke="#3b82f6" strokeWidth={2} name="请求数" dot={{ r: 3 }} />
+                  <Line hide={!trendVisible.tokens} yAxisId={trendConfig.lineAxisMap.tokens} type="monotone" dataKey="tokens" stroke="#10b981" strokeWidth={2} name="Tokens" dot={{ r: 3 }} />
+                  <Line hide={!trendVisible.cost} yAxisId={trendConfig.lineAxisMap.cost} type="monotone" dataKey="cost" stroke="#fbbf24" strokeWidth={2} name="费用" dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
             )}
@@ -962,18 +1046,26 @@ export default function DashboardPage() {
                   <YAxis yAxisId="right" orientation="right" stroke={darkMode ? "#94a3b8" : "#64748b"} tickFormatter={(v) => formatCompactNumber(v)} fontSize={12} />
                   <Tooltip 
                     contentStyle={{ borderRadius: 12, backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid rgba(100,116,139,0.6)", color: "#f8fafc" }} 
-                    formatter={(value: number, name: string) => [formatNumberWithCommas(value), name]}
+                    formatter={numericTooltipFormatter}
                     labelFormatter={(label) => formatHourLabel(label)}
                   />
-                  <Legend 
+                  <TrendLegend 
                     wrapperStyle={{ cursor: "pointer" }} 
                     onClick={handleHourlyLegendClick}
+                    itemSorter={(item: any) => ({ requests: 0, inputTokens: 1, outputTokens: 2, reasoningTokens: 3, cachedTokens: 4 } as Record<string, number>)[item?.dataKey] ?? 999}
+                    payload={[
+                      { value: "请求数", type: "line", id: "requests", color: "#3b82f6", dataKey: "requests" },
+                      { value: "输入", type: "square", id: "inputTokens", color: "#60a5fa", dataKey: "inputTokens" },
+                      { value: "输出", type: "square", id: "outputTokens", color: "#4ade80", dataKey: "outputTokens" },
+                      { value: "思考", type: "square", id: "reasoningTokens", color: "#fbbf24", dataKey: "reasoningTokens" },
+                      { value: "缓存", type: "square", id: "cachedTokens", color: "#c084fc", dataKey: "cachedTokens" },
+                    ]}
                   />
-                  {/* 堆积柱状图 - 柔和配色，仅顶部圆角 */}
-                  <Bar hide={!hourlyVisible.inputTokens} yAxisId="right" dataKey="inputTokens" name="输入" stackId="tokens" fill="#60a5fa" />
-                  <Bar hide={!hourlyVisible.outputTokens} yAxisId="right" dataKey="outputTokens" name="输出" stackId="tokens" fill="#4ade80" />
-                  <Bar hide={!hourlyVisible.reasoningTokens} yAxisId="right" dataKey="reasoningTokens" name="思考" stackId="tokens" fill="#fbbf24" />
-                  <Bar hide={!hourlyVisible.cachedTokens} yAxisId="right" dataKey="cachedTokens" name="缓存" stackId="tokens" fill="#c084fc" radius={[4, 4, 0, 0]} />
+                  {/* 堆积柱状图 - 柔和配色，仅顶部圆角，增强动画 */}
+                  <Bar hide={!hourlyVisible.inputTokens} yAxisId="right" dataKey="inputTokens" name="输入" stackId="tokens" fill="#60a5fa" animationDuration={600} />
+                  <Bar hide={!hourlyVisible.outputTokens} yAxisId="right" dataKey="outputTokens" name="输出" stackId="tokens" fill="#4ade80" animationDuration={600} />
+                  <Bar hide={!hourlyVisible.reasoningTokens} yAxisId="right" dataKey="reasoningTokens" name="思考" stackId="tokens" fill="#fbbf24" animationDuration={600} />
+                  <Bar hide={!hourlyVisible.cachedTokens} yAxisId="right" dataKey="cachedTokens" name="缓存" stackId="tokens" fill="#c084fc" radius={[4, 4, 0, 0]} animationDuration={600} />
                   {/* 曲线在最上层 - 带描边突出显示 */}
                   <Line 
                     hide={!hourlyVisible.requests}
@@ -1276,22 +1368,42 @@ export default function DashboardPage() {
                   <LineChart data={overviewData.byDay} margin={{ top: 0, right: 40, left: 0, bottom: 0 }}>
                     <CartesianGrid stroke="#334155" strokeDasharray="5 5" />
                     <XAxis dataKey="label" stroke="#94a3b8" fontSize={12} />
-                    <YAxis yAxisId="left" stroke="#3b82f6" tickFormatter={(v) => formatCompactNumber(v)} fontSize={12} />
-                    <YAxis yAxisId="right" orientation="right" stroke="#10b981" tickFormatter={(v) => formatCompactNumber(v)} fontSize={12} />
-                    <YAxis yAxisId="cost" orientation="right" stroke="#fbbf24" tickFormatter={(v) => formatCurrency(v)} fontSize={12} />
+                    <YAxis 
+                      yAxisId="left" 
+                      stroke={trendConfig.leftAxis.color} 
+                      tickFormatter={trendConfig.leftAxis.formatter} 
+                      fontSize={12} 
+                    />
+                    <YAxis
+                      yAxisId="right"
+                      orientation="right"
+                      stroke={trendConfig.rightAxis.color}
+                      tickFormatter={trendConfig.rightAxis.formatter}
+                      fontSize={12}
+                      hide={!trendConfig.rightAxisVisible}
+                    />
+                    <YAxis
+                      yAxisId="cost"
+                      orientation="right"
+                      stroke="#fbbf24"
+                      tickFormatter={(v) => formatCurrency(v)}
+                      fontSize={12}
+                      hide={trendConfig.lineAxisMap.cost !== 'cost'}
+                    />
                     <Tooltip
                       contentStyle={{ borderRadius: 12, backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid rgba(100,116,139,0.6)", color: "#f8fafc" }}
-                      formatter={(value: number, name: string) => name === "费用" ? [formatCurrency(value), name] : [formatNumberWithCommas(value), name]}
+                      formatter={trendTooltipFormatter}
                     />
-                    <Legend 
+                    <TrendLegend 
                       height={24} 
                       iconSize={10} 
                       wrapperStyle={{ paddingTop: 0, paddingBottom: 0, lineHeight: "24px", cursor: "pointer" }} 
                       onClick={handleTrendLegendClick}
+                      itemSorter={(item: any) => ({ requests: 0, tokens: 1, cost: 2 } as Record<string, number>)[item?.dataKey] ?? 999}
                     />
-                    <Line hide={!trendVisible.requests} yAxisId="left" type="monotone" dataKey="requests" stroke="#3b82f6" strokeWidth={2} name="请求数" dot={{ r: 3 }} />
-                    <Line hide={!trendVisible.tokens} yAxisId="right" type="monotone" dataKey="tokens" stroke="#10b981" strokeWidth={2} name="Tokens" dot={{ r: 3 }} />
-                    <Line hide={!trendVisible.cost} yAxisId="cost" type="monotone" dataKey="cost" stroke="#fbbf24" strokeWidth={2} name="费用" dot={{ r: 3 }} />
+                    <Line hide={!trendVisible.requests} yAxisId={trendConfig.lineAxisMap.requests} type="monotone" dataKey="requests" stroke="#3b82f6" strokeWidth={2} name="请求数" dot={{ r: 3 }} />
+                    <Line hide={!trendVisible.tokens} yAxisId={trendConfig.lineAxisMap.tokens} type="monotone" dataKey="tokens" stroke="#10b981" strokeWidth={2} name="Tokens" dot={{ r: 3 }} />
+                    <Line hide={!trendVisible.cost} yAxisId={trendConfig.lineAxisMap.cost} type="monotone" dataKey="cost" stroke="#fbbf24" strokeWidth={2} name="费用" dot={{ r: 3 }} />
                   </LineChart>
                 </ResponsiveContainer>
               )}
@@ -1419,17 +1531,27 @@ export default function DashboardPage() {
                     <YAxis yAxisId="right" orientation="right" stroke={darkMode ? "#94a3b8" : "#64748b"} tickFormatter={(v) => formatCompactNumber(v)} fontSize={12} />
                     <Tooltip 
                       contentStyle={{ borderRadius: 12, backgroundColor: "rgba(0,0,0,0.8)", border: "1px solid rgba(100,116,139,0.6)", color: "#f8fafc" }} 
-                      formatter={(value: number, name: string) => [formatNumberWithCommas(value), name]}
+                      formatter={numericTooltipFormatter}
                       labelFormatter={(label) => formatHourLabel(label)}
                     />
-                    <Legend 
+                    <TrendLegend 
                       wrapperStyle={{ cursor: "pointer" }} 
                       onClick={handleHourlyLegendClick}
+                      itemSorter={(item: any) => ({ requests: 0, inputTokens: 1, outputTokens: 2, reasoningTokens: 3, cachedTokens: 4 } as Record<string, number>)[item?.dataKey] ?? 999}
+                      payload={[
+                        { value: "请求数", type: "line", id: "requests", color: "#3b82f6", dataKey: "requests" },
+                        { value: "输入", type: "square", id: "inputTokens", color: "#60a5fa", dataKey: "inputTokens" },
+                        { value: "输出", type: "square", id: "outputTokens", color: "#4ade80", dataKey: "outputTokens" },
+                        { value: "思考", type: "square", id: "reasoningTokens", color: "#fbbf24", dataKey: "reasoningTokens" },
+                        { value: "缓存", type: "square", id: "cachedTokens", color: "#c084fc", dataKey: "cachedTokens" },
+                      ]}
                     />
-                    <Bar hide={!hourlyVisible.inputTokens} yAxisId="right" dataKey="inputTokens" name="输入" stackId="tokens" fill="#60a5fa" />
-                    <Bar hide={!hourlyVisible.outputTokens} yAxisId="right" dataKey="outputTokens" name="输出" stackId="tokens" fill="#4ade80" />
-                    <Bar hide={!hourlyVisible.reasoningTokens} yAxisId="right" dataKey="reasoningTokens" name="思考" stackId="tokens" fill="#fbbf24" />
-                    <Bar hide={!hourlyVisible.cachedTokens} yAxisId="right" dataKey="cachedTokens" name="缓存" stackId="tokens" fill="#c084fc" radius={[4, 4, 0, 0]} />
+                    {/* 堆积柱状图 - 柔和配色，仅顶部圆角，增强动画 */}
+                    <Bar hide={!hourlyVisible.inputTokens} yAxisId="right" dataKey="inputTokens" name="输入" stackId="tokens" fill="#60a5fa" animationDuration={600} />
+                    <Bar hide={!hourlyVisible.outputTokens} yAxisId="right" dataKey="outputTokens" name="输出" stackId="tokens" fill="#4ade80" animationDuration={600} />
+                    <Bar hide={!hourlyVisible.reasoningTokens} yAxisId="right" dataKey="reasoningTokens" name="思考" stackId="tokens" fill="#fbbf24" animationDuration={600} />
+                    <Bar hide={!hourlyVisible.cachedTokens} yAxisId="right" dataKey="cachedTokens" name="缓存" stackId="tokens" fill="#c084fc" animationDuration={600} />
+                    {/* 曲线在最上层 - 带描边突出显示 */}
                     <Line 
                       hide={!hourlyVisible.requests}
                       yAxisId="left" 
