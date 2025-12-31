@@ -1100,7 +1100,12 @@ export default function ExplorePage() {
             <span className="text-slate-400">渲染点数：</span>
             <span>{formatNumberWithCommas(data?.returned ?? 0)}</span>
           </div>
-          {zoomDomain && (
+          {zoomDomain && dataBounds && (() => {
+            const totalXRange = dataBounds.x[1] - dataBounds.x[0];
+            const zoomXRange = zoomDomain.x[1] - zoomDomain.x[0];
+            const zoomRatio = totalXRange > 0 ? zoomXRange / totalXRange : 1;
+            return zoomRatio < 0.999;
+          })() && (
             <button
               type="button"
               onClick={resetZoom}
