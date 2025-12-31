@@ -138,7 +138,7 @@ function LoginPageContent() {
 
             {isLocked && (
               <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 flex items-start gap-3">
-                <Shield className="h-5 w-5 mt-0.5 flex-shrink-0 animate-pulse" />
+                <Shield className="h-5 w-5 mt-0.5 shrink-0 animate-pulse" />
                 <div className="flex-1">
                   <p className="font-semibold mb-1">账户已锁定</p>
                   <p className="text-sm flex items-center gap-1.5">

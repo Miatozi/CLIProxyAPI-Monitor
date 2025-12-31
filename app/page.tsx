@@ -577,7 +577,7 @@ export default function DashboardPage() {
     <main className={`min-h-screen px-6 py-8 transition-colors ${darkMode ? "bg-slate-900 text-slate-100" : "bg-slate-50 text-slate-900"}`}>
       {overviewError ? (
         <div className="mb-6 flex items-start gap-3 rounded-xl border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-          <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0" />
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
           <div>
             <p className="font-semibold">加载失败</p>
             <p className="text-red-300">{overviewError}</p>
@@ -957,7 +957,7 @@ export default function DashboardPage() {
                 {/* 饼图 */}
                 <div
                   ref={pieChartContainerRef}
-                  className="flex-shrink-0 w-64"
+                  className="shrink-0 w-64"
                   onPointerLeave={() => {
                     cancelPieLegendClear();
                     setPieTooltipOpen(false);
@@ -1055,7 +1055,7 @@ export default function DashboardPage() {
                         >
                           <div className="flex items-center gap-2 mb-1">
                             <div 
-                              className={`w-3 h-3 rounded-full flex-shrink-0 transition-all duration-200 ${
+                              className={`w-3 h-3 rounded-full shrink-0 transition-all duration-200 ${
                                 isHighlighted && hoveredPieIndex === originalIndex ? 'ring-2 ring-offset-1' : ''
                               }`}
                               style={{ 
@@ -1710,7 +1710,7 @@ export default function DashboardPage() {
                       >
                         <div className="flex items-center gap-2 mb-1.5">
                           <div 
-                            className={`w-4 h-4 rounded-full flex-shrink-0 transition-all duration-200 ${
+                            className={`w-4 h-4 rounded-full shrink-0 transition-all duration-200 ${
                               isHighlighted && hoveredPieIndex === originalIndex ? 'ring-2 ring-offset-1' : ''
                             }`}
                             style={{ 
