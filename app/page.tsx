@@ -123,8 +123,18 @@ export default function DashboardPage() {
   const saveStatusTimerRef = useRef<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [syncStatus, setSyncStatus] = useState<string | null>(null);
-  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+  const [syncStatus, setSyncStatus] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return window.localStorage.getItem("lastSyncStatus") || null;
+  });
+  const syncStatusTimerRef = useRef<number | null>(null);
+  const [syncStatusClosing, setSyncStatusClosing] = useState(false);
+  const [saveStatusClosing, setSaveStatusClosing] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(() => {
+    if (typeof window === "undefined") return null;
+    const saved = window.localStorage.getItem("lastSyncTime");
+    return saved ? new Date(saved) : null;
+  });
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [ready, setReady] = useState(false);
   const [pieMode, setPieMode] = useState<"tokens" | "requests">("tokens");
@@ -282,6 +292,66 @@ export default function DashboardPage() {
     };
   }, [pieTooltipOpen, cancelPieLegendClear]);
 
+  // 关闭syncStatus toast
+  const closeSyncStatus = useCallback(() => {
+    setSyncStatusClosing(true);
+    setTimeout(() => {
+      setSyncStatus(null);
+      setSyncStatusClosing(false);
+    }, 400);
+  }, []);
+
+  // 关闭saveStatus toast  
+  const closeSaveStatus = useCallback(() => {
+    setSaveStatusClosing(true);
+    setTimeout(() => {
+      setSaveStatus(null);
+      setSaveStatusClosing(false);
+    }, 400);
+  }, []);
+
+  // 自动清除 syncStatus toast
+  useEffect(() => {
+    if (!syncStatus) return;
+    
+    if (syncStatusTimerRef.current !== null) {
+      window.clearTimeout(syncStatusTimerRef.current);
+    }
+    
+    syncStatusTimerRef.current = window.setTimeout(() => {
+      closeSyncStatus();
+      syncStatusTimerRef.current = null;
+    }, 10000);
+    
+    return () => {
+      if (syncStatusTimerRef.current !== null) {
+        window.clearTimeout(syncStatusTimerRef.current);
+        syncStatusTimerRef.current = null;
+      }
+    };
+  }, [syncStatus, closeSyncStatus]);
+
+  // 自动清除 saveStatus toast
+  useEffect(() => {
+    if (!saveStatus) return;
+    
+    if (saveStatusTimerRef.current !== null) {
+      window.clearTimeout(saveStatusTimerRef.current);
+    }
+    
+    saveStatusTimerRef.current = window.setTimeout(() => {
+      closeSaveStatus();
+      saveStatusTimerRef.current = null;
+    }, 10000);
+    
+    return () => {
+      if (saveStatusTimerRef.current !== null) {
+        window.clearTimeout(saveStatusTimerRef.current);
+        saveStatusTimerRef.current = null;
+      }
+    };
+  }, [saveStatus, closeSaveStatus]);
+
   const applyTheme = useCallback((nextDark: boolean) => {
     setDarkMode(nextDark);
     if (typeof document !== "undefined") {
@@ -302,14 +372,28 @@ export default function DashboardPage() {
       const res = await fetch("/api/sync", { method: "POST", cache: "no-store" });
       const data = await res.json();
       if (!res.ok) {
-        if (showMessage) setSyncStatus(`同步失败: ${data.error || res.statusText}`);
+        const errorMsg = `同步失败: ${data.error || res.statusText}`;
+        setSyncStatus(errorMsg);
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem("lastSyncStatus", errorMsg);
+        }
       } else {
-        setLastSyncTime(new Date());
-        if (showMessage) setSyncStatus(`已同步 ${data.inserted ?? 0} 条记录`);
+        const now = new Date();
+        const successMsg = `已同步 ${data.inserted ?? 0} 条记录`;
+        setLastSyncTime(now);
+        setSyncStatus(successMsg);
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem("lastSyncTime", now.toISOString());
+          window.localStorage.setItem("lastSyncStatus", successMsg);
+        }
         if (triggerRefresh && (data.inserted ?? 0) > 0) setRefreshTrigger((prev) => prev + 1);
       }
     } catch (err) {
-      if (showMessage) setSyncStatus(`同步失败: ${(err as Error).message}`);
+      const errorMsg = `同步失败: ${(err as Error).message}`;
+      setSyncStatus(errorMsg);
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("lastSyncStatus", errorMsg);
+      }
     } finally {
       syncingRef.current = false;
       setSyncing(false);
@@ -331,7 +415,7 @@ export default function DashboardPage() {
 
     const run = async () => {
       try {
-        await doSync(false, false);
+        await doSync(true, false);
         if (typeof window !== "undefined") {
           window.sessionStorage.setItem(autoSyncKey, "1");
         }
@@ -528,15 +612,8 @@ export default function DashboardPage() {
           statusTimerRef.current = null;
         }, 10000);
         
-        // 显示保存成功提示
-        if (saveStatusTimerRef.current !== null) {
-          clearTimeout(saveStatusTimerRef.current);
-        }
+        // 显示保存成功提示（会被useEffect自动清除）
         setSaveStatus(`已保存价格：${payload.model}`);
-        saveStatusTimerRef.current = window.setTimeout(() => {
-          setSaveStatus(null);
-          saveStatusTimerRef.current = null;
-        }, 10000);
         
         // 刷新 overview 数据以更新费用计算
         setRefreshTrigger((prev) => prev + 1);
@@ -677,16 +754,6 @@ export default function DashboardPage() {
             {lastSyncTime && (
               <span className={`text-xs ${darkMode ? "text-slate-500" : "text-slate-500"}`}>
                 上次同步: {lastSyncTime.toLocaleTimeString()}
-              </span>
-            )}
-            {syncStatus && (
-              <span className={`text-xs ${syncStatus.includes("失败") ? "text-red-400" : "text-green-400"}`}>
-                {syncStatus}
-              </span>
-            )}
-            {saveStatus && (
-              <span className="text-xs text-green-400">
-                {saveStatus}
               </span>
             )}
           </div>
@@ -1923,6 +1990,47 @@ export default function DashboardPage() {
           )}
         </div>
       </Modal>
+
+      {/* Toast 通知 - 右上角显示 */}
+      {syncStatus && (
+        <div
+          onClick={() => closeSyncStatus()}
+          className={`fixed right-6 top-24 z-50 cursor-pointer rounded-lg border px-4 py-3 shadow-lg transition-opacity hover:opacity-90 ${
+            syncStatusClosing ? "animate-toast-out" : "animate-toast-in"
+          } ${
+            syncStatus.includes("失败")
+              ? darkMode
+                ? "border-red-500/40 bg-red-900/80 text-red-100"
+                : "border-red-400 bg-red-50 text-red-900"
+              : darkMode
+              ? "border-green-500/40 bg-green-900/80 text-green-100"
+              : "border-green-400 bg-green-50 text-green-900"
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl animate-emoji-pop">{syncStatus.includes("失败") ? "❌" : "✅"}</span>
+            <span className="text-sm font-medium">{syncStatus}</span>
+          </div>
+        </div>
+      )}
+
+      {saveStatus && (
+        <div
+          onClick={() => closeSaveStatus()}
+          className={`fixed right-6 top-24 z-50 cursor-pointer rounded-lg border px-4 py-3 shadow-lg transition-opacity hover:opacity-90 ${
+            saveStatusClosing ? "animate-toast-out" : "animate-toast-in"
+          } ${
+            darkMode
+              ? "border-green-500/40 bg-green-900/80 text-green-100"
+              : "border-green-400 bg-green-50 text-green-900"
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl animate-emoji-pop">✅</span>
+            <span className="text-sm font-medium">{saveStatus}</span>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
