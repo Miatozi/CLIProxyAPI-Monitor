@@ -103,7 +103,12 @@ function buildHourlySeries(series: UsageSeriesPoint[], rangeHours?: number) {
 }
 
 export default function DashboardPage() {
+  const [mounted, setMounted] = useState(false);
   const [prices, setPrices] = useState<ModelPrice[]>([]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const [overview, setOverview] = useState<UsageOverview | null>(null);
   const [overviewError, setOverviewError] = useState<string | null>(null);
   const [overviewEmpty, setOverviewEmpty] = useState(false);
@@ -832,7 +837,7 @@ export default function DashboardPage() {
             </div>
             {lastSyncTime && (
               <span className={`text-xs ${darkMode ? "text-slate-500" : "text-slate-500"}`}>
-                上次同步: {lastSyncTime.toLocaleTimeString()}
+                上次同步: {mounted ? lastSyncTime.toLocaleTimeString() : "--:--:--"}
               </span>
             )}
           </div>

@@ -182,7 +182,7 @@ export default function Sidebar() {
         className="bg-slate-900 ring-1 ring-slate-700"
         backdropClassName="bg-black/60"
       >
-        <p className="mt-2 text-sm text-slate-400">关闭后将停止记录使用数据，需要时可再次开启。</p>
+        <p className="mt-2 text-sm text-slate-400">关闭后将停止 CLIProxyAPI 记录使用数据，需要时可再次开启。</p>
         <div className="mt-4 flex gap-2">
           <button
             type="button"
