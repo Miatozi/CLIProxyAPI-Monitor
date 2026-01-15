@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { assertEnv } from "@/lib/config";
 import { getOverview } from "@/lib/queries/overview";
+import { getOverviewAgg } from "@/lib/queries/overviewAgg";
 
 export const runtime = "nodejs";
 
@@ -20,7 +21,7 @@ const OVERVIEW_CACHE_MAX_ENTRIES = 100;
 const CDN_CACHE_CONTROL = "s-maxage=30, stale-while-revalidate=60";
 const overviewCache = new Map<string, CachedOverview>();
 
-function makeCacheKey(input: { days?: number; model?: string | null; route?: string | null; page?: number; pageSize?: number; start?: string | null; end?: string | null }) {
+function makeCacheKey(input: { days?: number; model?: string | null; route?: string | null; page?: number; pageSize?: number; start?: string | null; end?: string | null; mode?: string }) {
   return JSON.stringify({
     days: input.days ?? null,
     model: input.model ?? null,
@@ -28,7 +29,8 @@ function makeCacheKey(input: { days?: number; model?: string | null; route?: str
     page: input.page ?? null,
     pageSize: input.pageSize ?? null,
     start: input.start ?? null,
-    end: input.end ?? null
+    end: input.end ?? null,
+    mode: input.mode ?? "raw"
   });
 }
 
@@ -67,10 +69,18 @@ export async function GET(request: Request) {
     const pageSizeParam = searchParams.get("pageSize");
     const start = searchParams.get("start");
     const end = searchParams.get("end");
+    const preaggParam = searchParams.get("preagg");
+
+    // 预聚合开关逻辑
+    const enablePreaggRead = process.env.ENABLE_PREAGG_READ !== "false";
+    const forceAgg = preaggParam === "1";
+    const forceRaw = preaggParam === "0";
+    const useAgg = forceRaw ? false : (forceAgg ? true : enablePreaggRead);
+    const mode = useAgg ? "agg" : "raw";
 
     const page = pageParam ? Number.parseInt(pageParam, 10) : undefined;
     const pageSize = pageSizeParam ? Number.parseInt(pageSizeParam, 10) : undefined;
-    const cacheKey = makeCacheKey({ days, model, route, page, pageSize, start, end });
+    const cacheKey = makeCacheKey({ days, model, route, page, pageSize, start, end, mode });
     const cached = getCached(cacheKey);
     if (cached) {
       return NextResponse.json(cached, {
@@ -79,15 +89,40 @@ export async function GET(request: Request) {
       });
     }
 
-    const { overview, empty, days: appliedDays, meta, filters } = await getOverview(days, {
-      model: model || undefined,
-      route: route || undefined,
-      page,
-      pageSize,
-      start,
-      end
-    });
+    let result;
+    if (useAgg) {
+      try {
+        result = await getOverviewAgg(days, {
+          model: model || undefined,
+          route: route || undefined,
+          page,
+          pageSize,
+          start,
+          end
+        });
+      } catch (error) {
+        console.warn("[/api/overview] Agg query failed, falling back to raw:", error);
+        result = await getOverview(days, {
+          model: model || undefined,
+          route: route || undefined,
+          page,
+          pageSize,
+          start,
+          end
+        });
+      }
+    } else {
+      result = await getOverview(days, {
+        model: model || undefined,
+        route: route || undefined,
+        page,
+        pageSize,
+        start,
+        end
+      });
+    }
 
+    const { overview, empty, days: appliedDays, meta, filters } = result;
     const payload = { overview, empty, days: appliedDays, meta, filters };
     setCached(cacheKey, payload);
     return NextResponse.json(payload, {

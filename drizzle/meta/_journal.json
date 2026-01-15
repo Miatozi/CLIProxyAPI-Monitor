@@ -15,6 +15,13 @@
       "when": 1768456904997,
       "tag": "0001_misty_dreadnoughts",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1768468153016,
+      "tag": "0002_sad_blazing_skull",
+      "breakpoints": true
     }
   ]
 }

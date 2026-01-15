@@ -6,6 +6,7 @@ import { useState } from "react";
 import Sidebar from "./Sidebar";
 import MobileNav from "./MobileNav";
 import { ThemeProvider } from "./ThemeProvider";
+import { WebVitalsReporter } from "./WebVitalsReporter";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -18,6 +19,8 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   return (
     <ThemeProvider>
+      <WebVitalsReporter />
+
       {/* Mobile Menu Button */}
       <div className="fixed left-4 top-4 z-50 md:hidden">
         <button

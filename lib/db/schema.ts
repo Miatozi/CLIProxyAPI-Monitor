@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, timestamp, boolean, numeric, uniqueIndex, bigint, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, timestamp, boolean, numeric, uniqueIndex, bigint, primaryKey, doublePrecision, index } from "drizzle-orm/pg-core";
 
 export const modelPrices = pgTable("model_prices", {
   id: serial("id").primaryKey(),
@@ -76,5 +76,29 @@ export const usageDailyAgg = pgTable(
   },
   (table) => ({
     pk: primaryKey({ columns: [table.dayStart, table.route, table.model] })
+  })
+);
+
+// Web Vitals 性能监控表
+export const webVitals = pgTable(
+  "web_vitals",
+  {
+    id: serial("id").primaryKey(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    name: text("name").notNull(), // CLS, FCP, FID, INP, LCP, TTFB
+    metricId: text("metric_id").notNull(), // web-vitals 库生成的唯一 ID
+    value: doublePrecision("value").notNull(),
+    delta: doublePrecision("delta").notNull(),
+    rating: text("rating"), // good, needs-improvement, poor
+    navigationType: text("navigation_type"), // navigate, reload, back_forward, prerender
+    url: text("url"),
+    pathname: text("pathname"),
+    userAgent: text("user_agent"),
+    clientTs: bigint("client_ts", { mode: "number" }), // 客户端时间戳 (ms)
+    appVersion: text("app_version")
+  },
+  (table) => ({
+    createdAtIdx: index("idx_web_vitals_created_at").on(table.createdAt),
+    nameCreatedAtIdx: index("idx_web_vitals_name_created_at").on(table.name, table.createdAt)
   })
 );
