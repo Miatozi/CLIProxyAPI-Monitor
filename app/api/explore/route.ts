@@ -11,6 +11,7 @@ type CachedExplore = {
 
 const EXPLORE_CACHE_TTL_MS = 30_000;
 const EXPLORE_CACHE_MAX_ENTRIES = 100;
+const CDN_CACHE_CONTROL = "s-maxage=30, stale-while-revalidate=60";
 const exploreCache = new Map<string, CachedExplore>();
 
 function makeCacheKey(input: { days?: number; maxPoints?: number; start?: string | null; end?: string | null }) {
@@ -60,12 +61,18 @@ export async function GET(request: Request) {
     const cacheKey = makeCacheKey({ days, maxPoints, start, end });
     const cached = getCached(cacheKey);
     if (cached) {
-      return NextResponse.json(cached, { status: 200 });
+      return NextResponse.json(cached, {
+        status: 200,
+        headers: { "Cache-Control": CDN_CACHE_CONTROL }
+      });
     }
 
     const payload = await getExplorePoints(days, { maxPoints, start, end });
     setCached(cacheKey, payload);
-    return NextResponse.json(payload, { status: 200 });
+    return NextResponse.json(payload, {
+      status: 200,
+      headers: { "Cache-Control": CDN_CACHE_CONTROL }
+    });
   } catch (error) {
     console.error("/api/explore failed:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

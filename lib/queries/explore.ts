@@ -73,7 +73,12 @@ export async function getExplorePoints(daysInput?: number, opts?: { maxPoints?: 
 
   const step = total > maxPoints ? Math.ceil(total / maxPoints) : 1;
 
-  // Use row_number() sampling for stable, time-ordered down-sampling.
+  // Use time-bucket sampling for better performance (avoids window function overhead)
+  const endMs = until ? until.getTime() : Date.now();
+  const startMs = since.getTime();
+  const rangeMs = Math.max(1, endMs - startMs);
+  const bucketWidthMs = Math.max(1, Math.floor(rangeMs / Math.max(1, maxPoints)));
+
   const points = await db
     .select({
       ts: sql<number>`(extract(epoch from sampled.occurred_at) * 1000)::bigint`,
@@ -84,8 +89,16 @@ export async function getExplorePoints(daysInput?: number, opts?: { maxPoints?: 
       cachedTokens: sql<number>`sampled.cached_tokens`,
       model: sql<string>`sampled.model`
     })
-    .from(
-      sql`(
+    .from(sql`(
+      select distinct on (bucket)
+        occurred_at,
+        total_tokens,
+        input_tokens,
+        output_tokens,
+        reasoning_tokens,
+        cached_tokens,
+        model
+      from (
         select
           ${usageRecords.occurredAt} as occurred_at,
           ${usageRecords.totalTokens} as total_tokens,
@@ -94,12 +107,12 @@ export async function getExplorePoints(daysInput?: number, opts?: { maxPoints?: 
           ${usageRecords.reasoningTokens} as reasoning_tokens,
           ${usageRecords.cachedTokens} as cached_tokens,
           ${usageRecords.model} as model,
-          row_number() over (order by ${usageRecords.occurredAt}) as rn
+          floor(((extract(epoch from ${usageRecords.occurredAt}) * 1000 - ${startMs}) / ${bucketWidthMs}))::bigint as bucket
         from ${usageRecords}
         where ${where}
-      ) as sampled`
-    )
-    .where(sql`(sampled.rn - 1) % ${step} = 0`)
+      ) s
+      order by bucket, occurred_at
+    ) as sampled`)
     .orderBy(sql`sampled.occurred_at`)
     .limit(maxPoints);
 

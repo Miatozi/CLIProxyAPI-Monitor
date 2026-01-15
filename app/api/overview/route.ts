@@ -17,6 +17,7 @@ type CachedOverview = {
 
 const OVERVIEW_CACHE_TTL_MS = 30_000;
 const OVERVIEW_CACHE_MAX_ENTRIES = 100;
+const CDN_CACHE_CONTROL = "s-maxage=30, stale-while-revalidate=60";
 const overviewCache = new Map<string, CachedOverview>();
 
 function makeCacheKey(input: { days?: number; model?: string | null; route?: string | null; page?: number; pageSize?: number; start?: string | null; end?: string | null }) {
@@ -72,7 +73,10 @@ export async function GET(request: Request) {
     const cacheKey = makeCacheKey({ days, model, route, page, pageSize, start, end });
     const cached = getCached(cacheKey);
     if (cached) {
-      return NextResponse.json(cached, { status: 200 });
+      return NextResponse.json(cached, {
+        status: 200,
+        headers: { "Cache-Control": CDN_CACHE_CONTROL }
+      });
     }
 
     const { overview, empty, days: appliedDays, meta, filters } = await getOverview(days, {
@@ -86,7 +90,10 @@ export async function GET(request: Request) {
 
     const payload = { overview, empty, days: appliedDays, meta, filters };
     setCached(cacheKey, payload);
-    return NextResponse.json(payload, { status: 200 });
+    return NextResponse.json(payload, {
+      status: 200,
+      headers: { "Cache-Control": CDN_CACHE_CONTROL }
+    });
   } catch (error) {
     console.error("/api/overview failed:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

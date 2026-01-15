@@ -100,7 +100,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="fixed left-0 top-0 z-40 flex h-screen w-56 flex-col border-r border-slate-800 bg-slate-950 py-6">
+    <aside className="fixed left-0 top-0 z-40 hidden md:flex h-screen w-56 flex-col border-r border-slate-800 bg-slate-950 py-6">
       <div className="px-5">
         <h1 className="text-xl font-bold text-white">CLIProxyAPI</h1>
         <p className="text-sm text-slate-500">Usage Dashboard</p>

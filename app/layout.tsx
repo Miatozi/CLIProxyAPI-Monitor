@@ -1,8 +1,15 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import Sidebar from "./components/Sidebar";
 import ClientLayout from "./components/ClientLayout";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter"
+});
 
 export const metadata: Metadata = {
   title: "CLIProxyAPI Usage Dashboard",
@@ -11,8 +18,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className="bg-slate-950 text-slate-100">
+    <html lang="en" className={inter.variable}>
+      <body className="bg-slate-950 text-slate-100 font-sans">
         <ClientLayout>{children}</ClientLayout>
         <Analytics />
       </body>
