@@ -1,33 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
+import { useState } from "react";
 import Sidebar from "./Sidebar";
 import MobileNav from "./MobileNav";
+import { ThemeProvider } from "./ThemeProvider";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isLoginPage = pathname === "/login";
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
-    const applyInitialTheme = () => {
-      const saved = typeof window !== "undefined" ? window.localStorage.getItem("theme") : null;
-      const prefersDark = typeof window !== "undefined" ? window.matchMedia("(prefers-color-scheme: dark)").matches : true;
-      const isDark = saved ? saved === "dark" : prefersDark;
-      document.documentElement.classList.toggle("dark", isDark);
-    };
-
-    applyInitialTheme();
-  }, []);
-
   if (isLoginPage) {
     return <>{children}</>;
   }
 
   return (
-    <>
+    <ThemeProvider>
       {/* Mobile Menu Button */}
       <div className="fixed left-4 top-4 z-50 md:hidden">
         <button
@@ -48,6 +38,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <div className="ml-0 md:ml-56 min-h-screen transition-[margin] duration-200">
         {children}
       </div>
-    </>
+    </ThemeProvider>
   );
 }

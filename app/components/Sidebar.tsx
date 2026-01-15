@@ -6,6 +6,7 @@ import { BarChart3, FileText, Activity, LogOut, Github, ExternalLink } from "luc
 import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Modal } from "./Modal";
+import { useTheme } from "@/app/components/ThemeProvider";
 
 const links = [
   { href: "/", label: "仪表盘", icon: BarChart3 },
@@ -14,6 +15,7 @@ const links = [
 ];
 
 export default function Sidebar() {
+  const { isDarkMode } = useTheme();
   const pathname = usePathname();
   const router = useRouter();
   const [usageStatsEnabled, setUsageStatsEnabled] = useState<boolean | null>(null);
@@ -118,7 +120,7 @@ export default function Sidebar() {
               href={href}
               className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium transition-colors ${
                 active
-                  ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/50 dark:text-white"
+                  ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400"
                   : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
               }`}
             >
@@ -185,8 +187,8 @@ export default function Sidebar() {
         isOpen={showUsageConfirm}
         onClose={() => setShowUsageConfirm(false)}
         title="关闭上游使用统计？"
-        darkMode={true}
-        className="bg-slate-900 ring-1 ring-slate-700"
+        darkMode={isDarkMode}
+        className={isDarkMode ? "bg-slate-900 ring-1 ring-slate-700" : undefined}
         backdropClassName="bg-black/60"
       >
         <p className="mt-2 text-sm text-slate-400">关闭后将停止 CLIProxyAPI 记录使用数据，需要时可再次开启。</p>

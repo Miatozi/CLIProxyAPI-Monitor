@@ -7,6 +7,7 @@ import { formatCurrency, formatNumber, formatCompactNumber, formatNumberWithComm
 import { AlertTriangle, Info, LucideIcon, Activity, Save, RefreshCw, Moon, Sun, Pencil, Trash2, Maximize2, CalendarRange, X } from "lucide-react";
 import type { ModelPrice, UsageOverview, UsageSeriesPoint } from "@/lib/types";
 import { Modal } from "@/app/components/Modal";
+import { useTheme } from "@/app/components/ThemeProvider";
 
 // 饼图颜色 - 柔和配色
 const PIE_COLORS = ["#60a5fa", "#4ade80", "#fbbf24", "#c084fc", "#f472b6", "#38bdf8", "#a3e635", "#fb923c"];
@@ -177,7 +178,7 @@ export default function DashboardPage() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [ready, setReady] = useState(false);
   const [pieMode, setPieMode] = useState<"tokens" | "requests">("tokens");
-  const [darkMode, setDarkMode] = useState(true);
+  const { isDarkMode: darkMode, toggleTheme } = useTheme();
   const [editingPrice, setEditingPrice] = useState<ModelPrice | null>(null);
   const [editForm, setEditForm] = useState<PriceForm>({ model: "", inputPricePer1M: "", cachedInputPricePer1M: "", outputPricePer1M: "" });
   const [fullscreenChart, setFullscreenChart] = useState<"trend" | "pie" | "stacked" | null>(null);
@@ -427,15 +428,7 @@ export default function DashboardPage() {
     };
   }, [saveStatus, closeSaveStatus]);
 
-  const applyTheme = useCallback((nextDark: boolean) => {
-    setDarkMode(nextDark);
-    if (typeof document !== "undefined") {
-      document.documentElement.classList.toggle("dark", nextDark);
-    }
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("theme", nextDark ? "dark" : "light");
-    }
-  }, []);
+
 
   // 执行数据同步
   const doSync = useCallback(async (showMessage = true, triggerRefresh = true, timeout = 60000) => {
@@ -535,12 +528,7 @@ export default function DashboardPage() {
     };
   }, [doSync]);
 
-  useEffect(() => {
-    const saved = typeof window !== "undefined" ? window.localStorage.getItem("theme") : null;
-    const prefersDark = typeof window !== "undefined" ? window.matchMedia("(prefers-color-scheme: dark)").matches : true;
-    const initial = saved ? saved === "dark" : prefersDark;
-    applyTheme(initial);
-  }, [applyTheme]);
+
 
   useEffect(() => {
     if (!customPickerOpen) return;
@@ -891,7 +879,7 @@ export default function DashboardPage() {
         </div>
         <div className="flex items-center gap-4">
           <button
-            onClick={() => applyTheme(!darkMode)}
+            onClick={toggleTheme}
             className={`rounded-lg border p-2 transition ${
               darkMode
                 ? "border-slate-700 bg-slate-800 text-slate-300 hover:border-slate-500"

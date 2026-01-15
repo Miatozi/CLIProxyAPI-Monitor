@@ -18,7 +18,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var saved=localStorage.getItem("theme");var prefers=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;var isDark=saved?saved==="dark":prefers;document.documentElement.classList.toggle("dark",!!isDark);}catch(e){}})();`
+          }}
+        />
+      </head>
       <body className="bg-gradient-mesh text-slate-100 font-sans">
         <ClientLayout>{children}</ClientLayout>
         <Analytics />

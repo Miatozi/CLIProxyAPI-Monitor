@@ -301,6 +301,7 @@ function Skeleton({ className }: { className?: string }) {
 
 // 独立的图例组件，使用 React.memo 避免不必要的重渲染
 import { memo } from "react";
+import { useTheme } from "@/app/components/ThemeProvider";
 
 type ModelLegendProps = {
   models: string[];
@@ -1338,6 +1339,8 @@ export default function ExplorePage() {
     return modelColorMap.get(model) ?? MODEL_COLORS[0];
   }, [modelColorMap]);
 
+  const { isDarkMode } = useTheme();
+  
   // 使用 ref 存储高亮状态，避免 dotShape 因高亮变化而重建
   const highlightedModelRef = useRef(highlightedModel);
   const zoomSourceRef = useRef(zoomSource);
@@ -1358,11 +1361,11 @@ export default function ExplorePage() {
   const cartesianGridProps = useMemo(() => ({
     yAxisId: "left",
     strokeDasharray: "3 3",
-    stroke: "#64748b",
+    stroke: isDarkMode ? "#334155" : "#e2e8f0",
     strokeOpacity: 0.6,
     horizontal: true,
     vertical: true
-  }), []);
+  }), [isDarkMode]);
 
   // 散点图点形状组件 - 仅依赖 modelColorMap，其他通过 ref 访问
   const dotShape = useMemo(() => {
