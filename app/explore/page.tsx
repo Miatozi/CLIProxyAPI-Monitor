@@ -296,7 +296,7 @@ function useLerpYDomain(
 }
 
 function Skeleton({ className }: { className?: string }) {
-  return <div className={`animate-pulse rounded-lg bg-slate-700/50 ${className ?? ""}`} />;
+  return <div className={`animate-pulse rounded-lg bg-slate-200 dark:bg-slate-700/50 ${className ?? ""}`} />;
 }
 
 // 独立的图例组件，使用 React.memo 避免不必要的重渲染
@@ -322,26 +322,26 @@ const ModelLegend = memo(function ModelLegend({
   if (models.length === 0) return null;
   
   return (
-    <div className="mt-3 rounded-xl bg-slate-900/30 p-3 ring-1 ring-slate-800">
-      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300">
-        <span className="text-slate-400">模型图例（悬停高亮，点击隐藏）</span>
+    <div className="mt-3 rounded-xl bg-white/60 p-3 ring-1 ring-slate-200 dark:bg-slate-900/30 dark:ring-slate-800">
+      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-300">
+        <span className="text-slate-500 dark:text-slate-400">模型图例（悬停高亮，点击隐藏）</span>
       </div>
       <div className="mt-2 max-h-20 overflow-auto pr-1">
-        <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-300">
+        <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-600 dark:text-slate-300">
           {models.map((m) => {
             const isHidden = hiddenModels.has(m);
             return (
               <button
                 key={m}
                 type="button"
-                className={`flex items-center gap-2 rounded-md px-1.5 py-0.5 transition-all hover:bg-slate-600/40 ${isHidden ? 'opacity-40' : ''}`}
+                className={`flex items-center gap-2 rounded-md px-1.5 py-0.5 transition-all hover:bg-slate-100 dark:hover:bg-slate-600/40 ${isHidden ? 'opacity-40' : ''}`}
                 onMouseEnter={() => onMouseEnter(m)}
                 onMouseLeave={onMouseLeave}
                 onClick={() => onClick(m)}
               >
-                <span 
-                  className={`h-2.5 w-2.5 rounded-full ${isHidden ? 'ring-1 ring-slate-500' : ''}`} 
-                  style={{ backgroundColor: isHidden ? 'transparent' : getModelColor(m), opacity: isHidden ? 1 : 0.8 }} 
+                <span
+                  className={`h-2.5 w-2.5 rounded-full ${isHidden ? 'ring-1 ring-slate-500' : ''}`}
+                  style={{ backgroundColor: isHidden ? 'transparent' : getModelColor(m), opacity: isHidden ? 1 : 0.8 }}
                 />
                 <span className={`max-w-[18rem] truncate ${isHidden ? 'line-through' : ''}`}>{m}</span>
               </button>
@@ -512,40 +512,40 @@ export default function ExplorePage() {
         : { left: defaultLeft }; // 使用 left 定位，显示在鼠标右侧
 
       return (
-        <div 
+        <div
           ref={tooltipRef}
-          className="pointer-events-none fixed z-50 rounded-xl bg-slate-900/60 px-3 py-2 text-sm shadow-lg ring-1 ring-slate-600/60 backdrop-blur-sm"
-          style={{ 
+          className="pointer-events-none fixed z-50 rounded-xl bg-white/90 px-3 py-2 text-sm text-slate-900 shadow-lg ring-1 ring-slate-200/60 backdrop-blur-sm dark:bg-slate-900/60 dark:text-slate-100 dark:ring-slate-600/60"
+          style={{
             ...positionStyle,
             top: state.y - 10,
             transform: 'translateY(-100%)'
           }}
         >
-          <div className="font-semibold text-slate-100">{formatTs(state.point.ts)}</div>
-          <div className="mt-1 flex items-center gap-2 text-slate-200">
-            <span className="text-slate-400">模型：</span>
+          <div className="font-semibold text-slate-900 dark:text-slate-100">{formatTs(state.point.ts)}</div>
+          <div className="mt-1 flex items-center gap-2 text-slate-700 dark:text-slate-200">
+            <span className="text-slate-500 dark:text-slate-400">模型：</span>
             <span className="inline-flex h-2.5 w-2.5 rounded-full" style={{ backgroundColor: getModelColor(state.point.model || ""), opacity: 0.7 }} />
             <span className="max-w-[22rem] truncate">{state.point.model || "-"}</span>
           </div>
-          <div className="mt-1 text-slate-200">
-            <span className="text-slate-400">总 Tokens：</span>
+          <div className="mt-1 text-slate-700 dark:text-slate-200">
+            <span className="text-slate-500 dark:text-slate-400">总 Tokens：</span>
             <span>{formatNumberWithCommas(state.point.tokens)}</span>
           </div>
-          <div className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1 text-slate-200">
+          <div className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1 text-slate-700 dark:text-slate-200">
             <div>
-              <span className="text-slate-400">输入：</span>
+              <span className="text-slate-500 dark:text-slate-400">输入：</span>
               <span style={{ color: TOKEN_COLORS.input }}>{formatNumberWithCommas(state.point.inputTokens)}</span>
             </div>
             <div>
-              <span className="text-slate-400">输出：</span>
+              <span className="text-slate-500 dark:text-slate-400">输出：</span>
               <span style={{ color: TOKEN_COLORS.output }}>{formatNumberWithCommas(state.point.outputTokens)}</span>
             </div>
             <div>
-              <span className="text-slate-400">思考：</span>
+              <span className="text-slate-500 dark:text-slate-400">思考：</span>
               <span style={{ color: TOKEN_COLORS.reasoning }}>{formatNumberWithCommas(state.point.reasoningTokens)}</span>
             </div>
             <div>
-              <span className="text-slate-400">缓存：</span>
+              <span className="text-slate-500 dark:text-slate-400">缓存：</span>
               <span style={{ color: TOKEN_COLORS.cached }}>{formatNumberWithCommas(state.point.cachedTokens)}</span>
             </div>
           </div>
@@ -1480,13 +1480,13 @@ export default function ExplorePage() {
   }, [globalSelection]);
 
     return (
-      <main className="min-h-screen bg-slate-900 px-6 pb-4 pt-8 text-slate-100">
+      <main className="min-h-screen bg-slate-50 px-6 pb-4 pt-8 text-slate-900 transition-colors duration-300 dark:bg-slate-900 dark:text-slate-100">
       <header className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">数据探索</h1>
-          <p className="text-sm text-slate-400">每个点代表一次请求（X=时间，Y=token 数，颜色=模型）</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">数据探索</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">每个点代表一次请求（X=时间，Y=token 数，颜色=模型）</p>
         </div>
-        <div className="flex flex-col items-start gap-2 text-sm text-slate-300 md:items-end">
+        <div className="flex flex-col items-start gap-2 text-sm text-slate-600 dark:text-slate-300 md:items-end">
           <div className="flex flex-wrap items-center gap-2 md:justify-end">
             {[7, 14, 30].map((days) => (
               <button
@@ -1494,8 +1494,8 @@ export default function ExplorePage() {
                 onClick={() => applyPresetRange(days)}
                 className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
                   rangeMode === "preset" && selectionSource === "local" && rangeDays === days
-                    ? "border-indigo-500 bg-indigo-500/20 text-indigo-100"
-                    : "border-slate-700 bg-slate-800 text-slate-200 hover:border-slate-500"
+                    ? "border-indigo-500 bg-indigo-50 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-100"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-500"
                 }`}
               >
                 最近 {days} 天
@@ -1510,31 +1510,31 @@ export default function ExplorePage() {
                 }}
                 className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
                   rangeMode === "custom" && selectionSource === "local"
-                    ? "border-indigo-500 bg-indigo-500/20 text-indigo-100"
-                    : "border-slate-700 bg-slate-800 text-slate-200 hover:border-slate-500"
+                    ? "border-indigo-500 bg-indigo-50 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-100"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-500"
                 }`}
               >
                 自定义
               </button>
               {customPickerOpen ? (
-                <div className="absolute right-0 z-30 mt-2 w-72 rounded-xl border border-slate-700 bg-slate-900 p-4 shadow-2xl">
+                <div className="absolute right-0 z-30 mt-2 w-72 rounded-xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-slate-700 dark:bg-slate-900">
                   <div className="space-y-3 text-sm">
                     <div className="grid grid-cols-1 gap-2">
-                      <label className="text-slate-300">
+                      <label className="text-slate-600 dark:text-slate-300">
                         开始日期
                         <input
                           type="date"
-                          className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none"
+                          className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                           value={customDraftStart}
                           max={customDraftEnd || undefined}
                           onChange={(e) => setCustomDraftStart(e.target.value)}
                         />
                       </label>
-                      <label className="text-slate-300">
+                      <label className="text-slate-600 dark:text-slate-300">
                         结束日期
                         <input
                           type="date"
-                          className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none"
+                          className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                           value={customDraftEnd}
                           min={customDraftStart || undefined}
                           onChange={(e) => setCustomDraftEnd(e.target.value)}
@@ -1551,7 +1551,7 @@ export default function ExplorePage() {
                           setCustomDraftStart(customStart);
                           setCustomDraftEnd(customEnd);
                         }}
-                        className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-300 hover:bg-slate-800"
+                        className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                       >
                         取消
                       </button>
@@ -1571,8 +1571,8 @@ export default function ExplorePage() {
               onClick={applyDashboardRange}
               className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
                 selectionSource === "global"
-                  ? "border-emerald-500 bg-emerald-500/20 text-emerald-100"
-                  : "border-slate-700 bg-slate-800 text-slate-200 hover:border-slate-500"
+                  ? "border-emerald-500 bg-emerald-50 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-100"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-500"
               }`}
             >
               跟随仪表盘
@@ -1586,14 +1586,14 @@ export default function ExplorePage() {
         </div>
       </header>
 
-      <section className="mt-6 rounded-2xl bg-slate-950/40 p-5 ring-1 ring-slate-800">
-        <div className="flex min-h-[28px] flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-300">
+      <section className="mt-6 rounded-2xl bg-white/50 p-5 ring-1 ring-slate-200 dark:bg-slate-950/40 dark:ring-slate-800">
+        <div className="flex min-h-[28px] flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600 dark:text-slate-300">
           <div>
-            <span className="text-slate-400">总点数：</span>
+            <span className="text-slate-500 dark:text-slate-400">总点数：</span>
             <span>{formatNumberWithCommas(data?.total ?? 0)}</span>
           </div>
           <div>
-            <span className="text-slate-400">渲染点数：</span>
+            <span className="text-slate-500 dark:text-slate-400">渲染点数：</span>
             <span>{formatNumberWithCommas(visiblePoints.length)}</span>
           </div>
           {zoomDomain && dataBounds && (() => {
@@ -1605,20 +1605,20 @@ export default function ExplorePage() {
             <button
               type="button"
               onClick={resetZoom}
-              className="rounded-lg bg-slate-600/90 px-3 py-1 text-xs text-slate-100 transition-colors hover:bg-slate-500"
+              className="rounded-lg bg-slate-200 px-3 py-1 text-xs text-slate-700 transition-colors hover:bg-slate-300 dark:bg-slate-600/90 dark:text-slate-100 dark:hover:bg-slate-500"
             >
               重置缩放
             </button>
           )}
           <div className="ml-auto flex items-center gap-4">
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-400 hover:text-slate-300">
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300">
               <button
                 type="button"
                 role="switch"
                 aria-checked={showStackedArea}
                 onClick={() => setShowStackedArea(!showStackedArea)}
-                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
-                  showStackedArea ? 'bg-blue-500' : 'bg-slate-600'
+                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900 ${
+                  showStackedArea ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-600'
                 }`}
               >
                 <span
@@ -1629,7 +1629,7 @@ export default function ExplorePage() {
               </button>
               <span>模型堆叠分布图</span>
             </label>
-            <span className="text-xs text-slate-500">提示：拖拽框选可缩放区域</span>
+            <span className="text-xs text-slate-400 dark:text-slate-500">提示：拖拽框选可缩放区域</span>
           </div>
         </div>
 
@@ -1646,14 +1646,14 @@ export default function ExplorePage() {
           {loading ? (
             <Skeleton className="h-full" />
           ) : error ? (
-            <div className="flex h-full flex-col items-center justify-center rounded-xl border border-dashed border-slate-700 bg-slate-900/30 text-center">
-                  <p className="text-base text-slate-200">加载失败</p>
-                  <p className="mt-1 text-sm text-slate-400">{error}</p>
+            <div className="flex h-full flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-center dark:border-slate-700 dark:bg-slate-900/30">
+                  <p className="text-base text-slate-700 dark:text-slate-200">加载失败</p>
+                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{error}</p>
             </div>
           ) : points.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center rounded-xl border border-dashed border-slate-700 bg-slate-900/30 text-center">
-                  <p className="text-base text-slate-200">暂无请求明细数据</p>
-                  <p className="mt-1 text-sm text-slate-400">如果上游 /usage 未提供 details，此图会为空。</p>
+            <div className="flex h-full flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-center dark:border-slate-700 dark:bg-slate-900/30">
+                  <p className="text-base text-slate-700 dark:text-slate-200">暂无请求明细数据</p>
+                  <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">如果上游 /usage 未提供 details，此图会为空。</p>
             </div>
           ) : (
             <>
@@ -1728,7 +1728,8 @@ export default function ExplorePage() {
                       domain={activeDomain?.x}
                       scale="time"
                       tickFormatter={(v) => formatTs(Number(v))}
-                      stroke="#cbd5e1"
+                      stroke="currentColor"
+                      className="text-slate-400 dark:text-slate-300"
                       fontSize={13}
                       allowDataOverflow
                       axisLine={false}
@@ -1740,7 +1741,8 @@ export default function ExplorePage() {
                       type="number"
                       dataKey="tokens"
                       domain={smoothYDomain || activeDomain?.y}
-                      stroke="#cbd5e1"
+                      stroke="currentColor"
+                      className="text-slate-400 dark:text-slate-300"
                       fontSize={13}
                       ticks={computedYTicks}
                       interval="preserveStartEnd"
@@ -1809,9 +1811,9 @@ export default function ExplorePage() {
               className="relative mt-1 h-16 select-none"
               style={{ marginLeft: 132 , marginRight: 12 }}
             >
-              <div 
+              <div
                 ref={xRangeContainerRef}
-                className="relative h-10 w-full cursor-ew-resize overflow-visible rounded-lg bg-slate-950/40 ring-1 ring-slate-800/80 transition-colors"
+                className="relative h-10 w-full cursor-ew-resize overflow-visible rounded-lg bg-slate-100 ring-1 ring-slate-200 transition-colors dark:bg-slate-950/40 dark:ring-slate-800/80"
                 onMouseDown={handleXRangeMouseDown}
                 onMouseLeave={() => !isXRangeDragging && setXRangeHover(null)}
                 onDoubleClick={zoomDomain ? resetZoom : undefined}
@@ -1855,8 +1857,8 @@ export default function ExplorePage() {
                     <>
                       {/* 左侧灰色区域 */}
                       {startRatio > 0.001 && (
-                        <div 
-                          className="pointer-events-none absolute top-0 h-full rounded-l-lg bg-slate-950/55"
+                        <div
+                          className="pointer-events-none absolute top-0 h-full rounded-l-lg bg-slate-200/70 dark:bg-slate-950/55"
                           style={{
                             left: 0,
                             width: `${startRatio * 100}%`,
@@ -1865,8 +1867,8 @@ export default function ExplorePage() {
                       )}
                       {/* 右侧灰色区域 */}
                       {endRatio < 0.999 && (
-                        <div 
-                          className="pointer-events-none absolute top-0 h-full rounded-r-lg bg-slate-950/55"
+                        <div
+                          className="pointer-events-none absolute top-0 h-full rounded-r-lg bg-slate-200/70 dark:bg-slate-950/55"
                           style={{
                             left: `${endRatio * 100}%`,
                             right: 0,
@@ -1890,22 +1892,22 @@ export default function ExplorePage() {
                         style={{ left: `${startRatio * 100}%` }}
                         onMouseEnter={() => setXRangeHover('left')}
                       >
-                        <div className="h-6 w-1.5 rounded-full bg-slate-200/90 ring-1 ring-slate-950/80 shadow-none transition-[background-color,width] duration-150 group-hover:w-2 group-hover:bg-slate-50" />
+                        <div className="h-6 w-1.5 rounded-full bg-slate-200/90 ring-1 ring-slate-400 shadow-none transition-[background-color,width] duration-150 group-hover:w-2 group-hover:bg-slate-50 dark:ring-slate-950/80" />
                         {/* 时间标签 - 仅 hover 或拖动时显示 */}
-                        <div className={`absolute bottom-full mb-1 whitespace-nowrap rounded-md bg-slate-900/70 px-1.5 py-0.5 text-[10px] font-medium text-slate-200 ring-1 ring-slate-700/60 transition-opacity duration-150 ${showLeftLabel ? 'opacity-100' : 'opacity-0'}`}>
+                        <div className={`absolute bottom-full mb-1 whitespace-nowrap rounded-md bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-900 ring-1 ring-slate-200 transition-opacity duration-150 dark:bg-slate-900/70 dark:text-slate-200 dark:ring-slate-700/60 ${showLeftLabel ? 'opacity-100' : 'opacity-0'}`}>
                           {formatTs(currentSelection[0])}
                         </div>
                       </div>
 
                       {/* 右侧拖动手柄 */}
-                      <div 
+                      <div
                         className="group absolute top-0 z-10 flex h-full w-5 -translate-x-1/2 cursor-ew-resize items-center justify-center"
                         style={{ left: `${endRatio * 100}%` }}
                         onMouseEnter={() => setXRangeHover('right')}
                       >
-                        <div className="h-6 w-1.5 rounded-full bg-slate-200/90 ring-1 ring-slate-950/80 shadow-none transition-[background-color,width] duration-150 group-hover:w-2 group-hover:bg-slate-50" />
+                        <div className="h-6 w-1.5 rounded-full bg-slate-200/90 ring-1 ring-slate-400 shadow-none transition-[background-color,width] duration-150 group-hover:w-2 group-hover:bg-slate-50 dark:ring-slate-950/80" />
                         {/* 时间标签 - 仅 hover 或拖动时显示 */}
-                        <div className={`absolute bottom-full mb-1 whitespace-nowrap rounded-md bg-slate-900/70 px-1.5 py-0.5 text-[10px] font-medium text-slate-200 ring-1 ring-slate-700/60 transition-opacity duration-150 ${showRightLabel ? 'opacity-100' : 'opacity-0'}`}>
+                        <div className={`absolute bottom-full mb-1 whitespace-nowrap rounded-md bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-900 ring-1 ring-slate-200 transition-opacity duration-150 dark:bg-slate-900/70 dark:text-slate-200 dark:ring-slate-700/60 ${showRightLabel ? 'opacity-100' : 'opacity-0'}`}>
                           {formatTs(currentSelection[1])}
                         </div>
                       </div>

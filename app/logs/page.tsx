@@ -40,7 +40,7 @@ function formatSize(bytes: number | undefined): string {
 }
 
 function Skeleton({ className }: { className?: string }) {
-  return <div className={`animate-pulse rounded-lg bg-slate-700/50 ${className ?? ""}`} />;
+  return <div className={`animate-pulse rounded-lg bg-slate-200 dark:bg-slate-700/50 ${className ?? ""}`} />;
 }
 
 export default function LogsPage() {
@@ -222,23 +222,23 @@ export default function LogsPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-slate-900 px-6 py-8 text-slate-100">
+    <main className="min-h-screen bg-slate-50 px-6 py-8 text-slate-900 transition-colors duration-300 dark:bg-slate-900 dark:text-slate-100">
       <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Logs</h1>
-          <p className="text-base text-slate-400">展示 /logs 最新输出，未持久化</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Logs</h1>
+          <p className="text-base text-slate-500 dark:text-slate-400">展示 /logs 最新输出，未持久化</p>
         </div>
-        <div className="flex items-center gap-3 text-sm text-slate-300">
+        <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
           <button
             onClick={() => fetchLogs("full")}
-            className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 font-semibold hover:border-slate-500"
+            className="rounded-lg border border-slate-200 bg-white px-3 py-2 font-semibold hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-500"
             title="重新加载所有日志（可通过起始时间筛选）"
           >
             重新加载
           </button>
           <button
             onClick={() => fetchLogs("incremental")}
-            className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 font-semibold hover:border-slate-500"
+            className="rounded-lg border border-slate-200 bg-white px-3 py-2 font-semibold hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-500"
             title="仅获取上次记录之后的新日志"
           >
             获取最新日志
@@ -246,28 +246,28 @@ export default function LogsPage() {
         </div>
       </header>
 
-      <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-slate-300">
+      <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-slate-600 dark:text-slate-300">
         <label className="flex items-center gap-2">
           <span>起始时间</span>
           <input
             type="datetime-local"
             value={getDateTimeInputValue()}
             onChange={(e) => handleDateTimeChange(e.target.value)}
-            className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-sm text-white focus:border-indigo-500 focus:outline-none"
+            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
           />
           {afterInput && (
             <button
               onClick={() => setAfterInput("")}
-              className="rounded-lg border border-slate-700 bg-slate-800 px-2 py-1.5 text-xs hover:border-slate-500"
+              className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-500"
               title="清除"
             >
               清除
             </button>
           )}
         </label>
-        <span className="text-slate-400">|</span>
+        <span className="text-slate-300 dark:text-slate-400">|</span>
         <span>最新记录: {latestText}</span>
-        <span className="text-slate-400">|</span>
+        <span className="text-slate-300 dark:text-slate-400">|</span>
         <div className="flex items-center gap-2">
           {[1, 6, 24].map((hours) => {
             // 计算当前按钮对应的时间戳
@@ -305,7 +305,7 @@ export default function LogsPage() {
                 className={`rounded-lg border px-3 py-1.5 font-semibold transition ${
                   isActive
                     ? 'border-blue-500 bg-blue-600 text-white'
-                    : 'border-slate-700 bg-slate-800 hover:border-slate-500'
+                    : 'border-slate-200 bg-white hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-500'
                 }`}
               >
                 最近 {hours}h
@@ -313,15 +313,15 @@ export default function LogsPage() {
             );
           })}
         </div>
-        <span className="text-slate-400">|</span>
+        <span className="text-slate-300 dark:text-slate-400">|</span>
         <label className="flex cursor-pointer items-center gap-2">
           <button
             type="button"
             role="switch"
             aria-checked={hideManagement}
             onClick={() => setHideManagement(!hideManagement)}
-            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
-              hideManagement ? 'bg-blue-500' : 'bg-slate-600'
+            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900 ${
+              hideManagement ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-600'
             }`}
           >
             <span
@@ -334,14 +334,14 @@ export default function LogsPage() {
         </label>
       </div>
 
-      <section className="mt-4 rounded-2xl bg-slate-800/50 p-4 shadow-sm ring-1 ring-slate-700">
+      <section className="mt-4 rounded-2xl bg-white/50 p-4 shadow-sm ring-1 ring-slate-200 dark:bg-slate-800/50 dark:ring-slate-700">
         {error ? <p className="text-base text-red-400">{error}</p> : null}
         {loading ? (
           <Skeleton className="h-40" />
         ) : lines.length === 0 ? (
           <p className="text-base text-slate-400">未读取到日志，检查是否开启“日志到文件”配置项</p>
         ) : (
-          <pre className="mt-2 max-h-96 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-slate-900/80 p-4 text-sm text-slate-100">
+          <pre className="mt-2 max-h-96 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-slate-100 p-4 text-sm text-slate-800 dark:bg-slate-900/80 dark:text-slate-100">
             {lines
               .filter(line => !hideManagement || !line.includes('/v0/management'))
               .join("\n")}
@@ -350,12 +350,12 @@ export default function LogsPage() {
       </section>
 
       <section className="mt-6 grid gap-4 md:grid-cols-2">
-        <div className="rounded-2xl bg-slate-800/50 p-4 shadow-sm ring-1 ring-slate-700">
+        <div className="rounded-2xl bg-white/50 p-4 shadow-sm ring-1 ring-slate-200 dark:bg-slate-800/50 dark:ring-slate-700">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-white">request-error-logs</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">request-error-logs</h2>
             <button
               onClick={fetchErrorLogs}
-              className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-sm font-semibold hover:border-slate-500"
+              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-500"
             >
               刷新列表
             </button>
@@ -366,16 +366,16 @@ export default function LogsPage() {
           ) : errorLogs.length === 0 ? (
             <p className="mt-3 text-base text-slate-400">暂无 error log 文件</p>
           ) : (
-            <div className="mt-3 max-h-96 overflow-y-auto divide-y divide-slate-700">
+            <div className="mt-3 max-h-96 overflow-y-auto divide-y divide-slate-200 dark:divide-slate-700">
               {sortedErrorLogs.map((file) => (
                 <div key={file.name} className="flex items-start gap-3 py-2">
                   <div className="flex-1 min-w-0">
-                    <p className="text-base font-semibold text-white break-words">{file.name}</p>
-                    <p className="text-sm text-slate-400">{formatSize(file.size)} • {formatTimestamp(file.modified)}</p>
+                    <p className="text-base font-semibold text-slate-900 break-words dark:text-white">{file.name}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{formatSize(file.size)} • {formatTimestamp(file.modified)}</p>
                   </div>
                   <button
                     onClick={() => fetchErrorLogFile(file.name)}
-                    className="shrink-0 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-sm font-semibold hover:border-slate-500"
+                    className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-500"
                   >
                     查看
                   </button>
@@ -385,19 +385,19 @@ export default function LogsPage() {
           )}
         </div>
 
-        <div className="rounded-2xl bg-slate-800/50 p-4 shadow-sm ring-1 ring-slate-700">
+        <div className="rounded-2xl bg-white/50 p-4 shadow-sm ring-1 ring-slate-200 dark:bg-slate-800/50 dark:ring-slate-700">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="shrink-0 text-lg font-semibold text-white">error log 内容</h2>
-            {errorLogName ? <span className="min-w-0 truncate text-sm text-slate-400" title={errorLogName}>{errorLogName}</span> : null}
+            <h2 className="shrink-0 text-lg font-semibold text-slate-900 dark:text-white">error log 内容</h2>
+            {errorLogName ? <span className="min-w-0 truncate text-sm text-slate-500 dark:text-slate-400" title={errorLogName}>{errorLogName}</span> : null}
           </div>
           {errorLogContentLoading ? (
             <Skeleton className="mt-3 h-32" />
           ) : errorLogContent ? (
-            <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-slate-900/80 p-4 text-sm text-slate-100">
+            <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-slate-100 p-4 text-sm text-slate-800 dark:bg-slate-900/80 dark:text-slate-100">
               {errorLogContent}
             </pre>
           ) : (
-            <p className="mt-3 text-base text-slate-400">选择一个文件查看内容</p>
+            <p className="mt-3 text-base text-slate-500 dark:text-slate-400">选择一个文件查看内容</p>
           )}
         </div>
       </section>
