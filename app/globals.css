@@ -26,6 +26,15 @@ html:not(.dark) {
   --scrollbar-thumb: #b0bccd;
   --scrollbar-thumb-hover: #8fa3bb;
   --scrollbar-track: #eef2f7;
+
+  /* 浅色主题玻璃态效果 */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(226, 232, 240, 0.8);
+  --glass-blur: 12px;
+
+  /* 浅色主题渐变背景 */
+  --gradient-from: rgba(99, 102, 241, 0.05);
+  --gradient-to: rgba(139, 92, 246, 0.03);
 }
 
 html {
@@ -250,6 +259,13 @@ body,
     radial-gradient(circle at 20% 50%, var(--gradient-from) 0%, transparent 50%),
     radial-gradient(circle at 80% 80%, var(--gradient-to) 0%, transparent 50%),
     #0f172a;
+}
+
+html:not(.dark) .bg-gradient-mesh {
+  background:
+    radial-gradient(circle at 20% 50%, var(--gradient-from) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, var(--gradient-to) 0%, transparent 50%),
+    #f8fafc;
 }
 
 /* 数据显示使用等宽数字，防止布局跳动 */
