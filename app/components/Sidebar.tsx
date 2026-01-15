@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { BarChart3, FileText, Activity, LogOut, Github, ExternalLink } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
+import { motion } from "framer-motion";
 import { Modal } from "./Modal";
 
 const links = [
@@ -72,7 +73,8 @@ export default function Sidebar() {
       const data = await res.json();
       setUsageStatsEnabled(Boolean(data["usage-statistics-enabled"]));
     } catch {
-      // ignore
+      // 失败时回滚
+      setUsageStatsEnabled(!nextEnabled);
     } finally {
       setUsageStatsLoading(false);
     }
@@ -85,6 +87,8 @@ export default function Sidebar() {
       setShowUsageConfirm(true);
       return;
     }
+    // 乐观 UI：立即更新状态
+    setUsageStatsEnabled(nextEnabled);
     applyUsageToggle(nextEnabled);
   };
 
@@ -142,9 +146,10 @@ export default function Sidebar() {
             <Activity className="h-4 w-4" />
             上游使用统计
           </div>
-          <button
+          <motion.button
             onClick={handleUsageToggle}
             disabled={usageStatsLoading || usageStatsEnabled === null}
+            whileTap={{ scale: 0.95 }}
             className={`rounded-full px-3 py-1 text-sm font-semibold transition ${
               usageStatsEnabled
                 ? "bg-emerald-600 text-white"
@@ -152,7 +157,7 @@ export default function Sidebar() {
             } ${usageStatsLoading ? "opacity-70" : ""}`}
           >
             {usageStatsLoading ? "..." : usageStatsEnabled ? "ON" : "OFF"}
-          </button>
+          </motion.button>
         </div>
         
         <div className="flex items-center gap-2">
@@ -164,14 +169,16 @@ export default function Sidebar() {
           >
             <Github className="h-4 w-4" />
           </a>
-          <button
+          <motion.button
             onClick={handleLogout}
             disabled={loggingOut}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
           >
             <LogOut className="h-4 w-4" />
             {loggingOut ? "退出中..." : "退出登录"}
-          </button>
+          </motion.button>
         </div>
       </div>
       <Modal
