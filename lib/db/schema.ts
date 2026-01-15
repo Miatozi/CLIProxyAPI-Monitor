@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, timestamp, boolean, numeric, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, timestamp, boolean, numeric, uniqueIndex, bigint, primaryKey } from "drizzle-orm/pg-core";
 
 export const modelPrices = pgTable("model_prices", {
   id: serial("id").primaryKey(),
@@ -30,5 +30,51 @@ export const usageRecords = pgTable(
   },
   (table) => ({
     uniq: uniqueIndex("usage_records_occurred_route_model_idx").on(table.occurredAt, table.route, table.model)
+  })
+);
+
+// 小时聚合表
+export const usageHourlyAgg = pgTable(
+  "usage_hourly_agg",
+  {
+    bucketStart: timestamp("bucket_start", { withTimezone: true }).notNull(),
+    route: text("route").notNull(),
+    model: text("model").notNull(),
+    totalTokens: bigint("total_tokens", { mode: "number" }).notNull().default(0),
+    inputTokens: bigint("input_tokens", { mode: "number" }).notNull().default(0),
+    outputTokens: bigint("output_tokens", { mode: "number" }).notNull().default(0),
+    reasoningTokens: bigint("reasoning_tokens", { mode: "number" }).notNull().default(0),
+    cachedTokens: bigint("cached_tokens", { mode: "number" }).notNull().default(0),
+    totalRequests: bigint("total_requests", { mode: "number" }).notNull().default(0),
+    successCount: bigint("success_count", { mode: "number" }).notNull().default(0),
+    failureCount: bigint("failure_count", { mode: "number" }).notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.bucketStart, table.route, table.model] })
+  })
+);
+
+// 日聚合表
+export const usageDailyAgg = pgTable(
+  "usage_daily_agg",
+  {
+    dayStart: timestamp("day_start", { withTimezone: true }).notNull(),
+    route: text("route").notNull(),
+    model: text("model").notNull(),
+    totalTokens: bigint("total_tokens", { mode: "number" }).notNull().default(0),
+    inputTokens: bigint("input_tokens", { mode: "number" }).notNull().default(0),
+    outputTokens: bigint("output_tokens", { mode: "number" }).notNull().default(0),
+    reasoningTokens: bigint("reasoning_tokens", { mode: "number" }).notNull().default(0),
+    cachedTokens: bigint("cached_tokens", { mode: "number" }).notNull().default(0),
+    totalRequests: bigint("total_requests", { mode: "number" }).notNull().default(0),
+    successCount: bigint("success_count", { mode: "number" }).notNull().default(0),
+    failureCount: bigint("failure_count", { mode: "number" }).notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.dayStart, table.route, table.model] })
   })
 );

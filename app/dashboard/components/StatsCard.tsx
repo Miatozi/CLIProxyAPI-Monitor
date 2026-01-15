@@ -26,10 +26,8 @@ export default function StatsCard({ title, value, icon: Icon, format = "number",
 
   return (
     <div
-      className={`rounded-xl border p-4 transition-all ${
-        darkMode
-          ? "border-slate-700 bg-slate-800/50 hover:border-slate-600"
-          : "border-slate-300 bg-white hover:border-slate-400"
+      className={`rounded-xl border p-4 transition-all glass-panel hover:border-slate-600 ${
+        darkMode ? "" : "bg-white border-slate-300 hover:border-slate-400"
       }`}
     >
       <div className="flex items-center justify-between">
@@ -37,7 +35,7 @@ export default function StatsCard({ title, value, icon: Icon, format = "number",
           <p className={`text-sm font-medium ${darkMode ? "text-slate-400" : "text-slate-600"}`}>
             {title}
           </p>
-          <p className={`mt-1 text-2xl font-bold ${darkMode ? "text-white" : "text-slate-900"}`}>
+          <p className={`mt-1 text-2xl font-bold tabular-nums ${darkMode ? "text-white" : "text-slate-900"}`}>
             {formattedValue}
           </p>
         </div>

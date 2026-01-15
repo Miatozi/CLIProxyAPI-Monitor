@@ -30,7 +30,7 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
       />
 
       {/* Drawer */}
-      <aside className="fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-slate-800 bg-slate-950 py-6 md:hidden">
+      <aside className="fixed left-0 top-0 z-50 flex h-screen w-64 flex-col border-r border-slate-800 glass-panel py-6 md:hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-5">
           <div>

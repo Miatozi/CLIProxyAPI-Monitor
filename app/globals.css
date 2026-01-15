@@ -10,6 +10,15 @@
   --scrollbar-thumb: #475569;
   --scrollbar-thumb-hover: #64748b;
   --scrollbar-track: transparent;
+
+  /* 玻璃态效果变量 */
+  --glass-bg: rgba(15, 23, 42, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: 12px;
+
+  /* 渐变背景 */
+  --gradient-from: rgba(99, 102, 241, 0.1);
+  --gradient-to: rgba(139, 92, 246, 0.05);
 }
 
 html:not(.dark) {
@@ -226,4 +235,38 @@ body,
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: 0.3s;
+}
+
+/* 玻璃态面板样式 */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+}
+
+/* 渐变背景网格 */
+.bg-gradient-mesh {
+  background:
+    radial-gradient(circle at 20% 50%, var(--gradient-from) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, var(--gradient-to) 0%, transparent 50%),
+    #0f172a;
+}
+
+/* 数据显示使用等宽数字，防止布局跳动 */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 骨架屏脉冲动画 */
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-skeleton-pulse {
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
