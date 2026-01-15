@@ -1,6 +1,7 @@
 "use client";
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { Maximize2 } from "lucide-react";
 import type { UsageSeriesPoint } from "@/lib/types";
 
 interface TrendChartProps {
@@ -8,12 +9,24 @@ interface TrendChartProps {
   dataKey: "requests" | "tokens" | "cost";
   title: string;
   color?: string;
+  onMaximize?: () => void;
 }
 
-export function TrendChart({ data, dataKey, title, color = "#3b82f6" }: TrendChartProps) {
+export function TrendChart({ data, dataKey, title, color = "#3b82f6", onMaximize }: TrendChartProps) {
   return (
     <div className="glass-panel rounded-lg p-6">
-      <h3 className="text-lg font-semibold mb-4 text-slate-100">{title}</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-slate-100">{title}</h3>
+        {onMaximize && (
+          <button
+            onClick={onMaximize}
+            className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-700 hover:text-white"
+            title="全屏查看"
+          >
+            <Maximize2 className="h-4 w-4" />
+          </button>
+        )}
+      </div>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="#334155" />

@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:migrate": "node scripts/migrate.mjs"
+    "db:migrate": "node scripts/migrate.mjs",
+    "db:backfill-agg": "node scripts/backfill-agg.mjs"
   },
   "dependencies": {
     "@vercel/analytics": "^1.4.1",

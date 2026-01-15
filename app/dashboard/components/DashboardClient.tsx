@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { DashboardUIProvider } from "@/app/dashboard/context/DashboardUIContext";
+import { DashboardUIProvider, useDashboardUI } from "@/app/dashboard/context/DashboardUIContext";
 import { TrendChart, HourlyChart, ModelPieChart, CostTable } from "@/app/dashboard/components/LazyCharts";
+import { DashboardToolbar } from "@/app/dashboard/components/DashboardToolbar";
+import { PricingConfig } from "@/app/dashboard/components/PricingConfig";
+import { FullscreenContainer } from "@/app/dashboard/components/FullscreenContainer";
 import type { UsageOverview } from "@/lib/types";
 
 interface DashboardClientProps {
@@ -22,6 +25,80 @@ interface DashboardClientProps {
   };
 }
 
+function DashboardContent({ data }: { data: DashboardClientProps["initialData"] }) {
+  const { setFullscreenChart } = useDashboardUI();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    window.location.reload();
+  };
+
+  return (
+    <>
+      <div className="space-y-6 p-6">
+        {/* 工具栏 */}
+        <DashboardToolbar
+          modelOptions={data.filters?.models || []}
+          routeOptions={data.filters?.routes || []}
+          onRefresh={handleRefresh}
+          isRefreshing={refreshing}
+        />
+
+        {/* 趋势图 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <TrendChart
+            data={data.overview.byDay}
+            dataKey="requests"
+            title="每日请求趋势"
+            color="#3b82f6"
+            onMaximize={() => setFullscreenChart("trend-requests")}
+          />
+          <TrendChart
+            data={data.overview.byDay}
+            dataKey="tokens"
+            title="每日 Token 趋势"
+            color="#8b5cf6"
+            onMaximize={() => setFullscreenChart("trend-tokens")}
+          />
+        </div>
+
+        {/* 费用趋势 */}
+        <TrendChart
+          data={data.overview.byDay}
+          dataKey="cost"
+          title="每日费用趋势"
+          color="#10b981"
+          onMaximize={() => setFullscreenChart("trend-cost")}
+        />
+
+        {/* 小时统计 */}
+        <HourlyChart
+          data={data.overview.byHour}
+          title="小时负载分布"
+          onMaximize={() => setFullscreenChart("hourly")}
+        />
+
+        {/* 模型分布 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ModelPieChart
+            data={data.overview.models}
+            title="模型费用分布"
+            onMaximize={() => setFullscreenChart("pie")}
+          />
+          <CostTable data={data.overview.models} title="模型费用明细" />
+        </div>
+
+        {/* 价格配置 */}
+        <PricingConfig onPriceChange={handleRefresh} />
+      </div>
+
+      {/* 全屏容器 */}
+      <FullscreenContainer data={data.overview} />
+    </>
+  );
+}
+
 export function DashboardClient({ initialData, initialFilters }: DashboardClientProps) {
   const [data] = useState(initialData);
 
@@ -38,32 +115,7 @@ export function DashboardClient({ initialData, initialFilters }: DashboardClient
 
   return (
     <DashboardUIProvider>
-      <div className="space-y-6 p-6">
-        {/* 趋势图 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <TrendChart
-            data={data.overview.byDay}
-            dataKey="requests"
-            title="每日请求趋势"
-            color="#3b82f6"
-          />
-          <TrendChart
-            data={data.overview.byDay}
-            dataKey="tokens"
-            title="每日 Token 趋势"
-            color="#8b5cf6"
-          />
-        </div>
-
-        {/* 小时统计 */}
-        <HourlyChart data={data.overview.byHour} title="小时负载分布" />
-
-        {/* 模型分布 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ModelPieChart data={data.overview.models} title="模型费用分布" />
-          <CostTable data={data.overview.models} title="模型费用明细" />
-        </div>
-      </div>
+      <DashboardContent data={data} />
     </DashboardUIProvider>
   );
 }
