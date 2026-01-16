@@ -2,6 +2,9 @@ import { getOverview } from "@/lib/queries/overview";
 import { getOverviewAgg } from "@/lib/queries/overviewAgg";
 import { DashboardClient } from "@/app/dashboard/components/DashboardClient";
 
+// 禁用静态生成,使用动态渲染(需要数据库连接)
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   searchParams: {
     days?: string;
