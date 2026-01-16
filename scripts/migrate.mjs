@@ -38,12 +38,17 @@ async function runMigrations() {
     `);
 
     console.log("✓ 索引创建完成");
-
-    process.exit(0);
   } catch (error) {
     console.error("迁移失败:", error);
-    process.exit(1);
+    throw error;
+  } finally {
+    await pool.end();
   }
 }
 
-runMigrations();
+runMigrations()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error("脚本执行失败:", err);
+    process.exit(1);
+  });
