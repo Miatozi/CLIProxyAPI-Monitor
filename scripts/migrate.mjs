@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// 数据库迁移脚本：执行 Drizzle 迁移并创建必要的索引
 import { drizzle } from "drizzle-orm/vercel-postgres";
 import { createPool } from "@vercel/postgres";
 import { sql } from "drizzle-orm";
