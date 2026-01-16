@@ -9,21 +9,24 @@ type ThemeContextType = {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [isDarkMode, setIsDarkMode] = useState(true);
+function getInitialTheme(): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    const saved = window.localStorage.getItem("theme");
+    if (saved) return saved === "dark";
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  } catch {
+    return true;
+  }
+}
 
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [isDarkMode, setIsDarkMode] = useState(getInitialTheme);
+
+  // 仅用于同步 DOM class，不调用 setState
   useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem("theme");
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      const initial = saved ? saved === "dark" : prefersDark;
-      setIsDarkMode(initial);
-      document.documentElement.classList.toggle("dark", initial);
-    } catch {
-      setIsDarkMode(true);
-      document.documentElement.classList.toggle("dark", true);
-    }
-  }, []);
+    document.documentElement.classList.toggle("dark", isDarkMode);
+  }, [isDarkMode]);
 
   const toggleTheme = () => {
     setIsDarkMode((prev) => {
