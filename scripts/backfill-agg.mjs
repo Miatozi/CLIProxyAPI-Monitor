@@ -97,14 +97,14 @@ async function backfillHourly(startDate, endDate, dryRun) {
     console.log("🔍 [DRY RUN] 预览将要执行的操作...");
     const preview = await db.execute(sql`
       SELECT
-        DATE_TRUNC('hour', occurred_at) as bucket_start,
+        date_trunc('hour', occurred_at at time zone 'Asia/Shanghai') at time zone 'Asia/Shanghai' as bucket_start,
         route,
         model,
         COUNT(*) as record_count
       FROM usage_records
       WHERE occurred_at >= ${startDate}::date
         AND occurred_at < (${endDate}::date + INTERVAL '1 day')
-      GROUP BY DATE_TRUNC('hour', occurred_at), route, model
+      GROUP BY date_trunc('hour', occurred_at at time zone 'Asia/Shanghai') at time zone 'Asia/Shanghai', route, model
       ORDER BY bucket_start DESC
       LIMIT 10
     `);
@@ -133,7 +133,7 @@ async function backfillHourly(startDate, endDate, dryRun) {
       updated_at
     )
     SELECT
-      DATE_TRUNC('hour', occurred_at) as bucket_start,
+      date_trunc('hour', occurred_at at time zone 'Asia/Shanghai') at time zone 'Asia/Shanghai' as bucket_start,
       route,
       model,
       SUM(total_tokens)::bigint as total_tokens,
@@ -149,7 +149,7 @@ async function backfillHourly(startDate, endDate, dryRun) {
     FROM usage_records
     WHERE occurred_at >= ${startDate}::date
       AND occurred_at < (${endDate}::date + INTERVAL '1 day')
-    GROUP BY DATE_TRUNC('hour', occurred_at), route, model
+    GROUP BY date_trunc('hour', occurred_at at time zone 'Asia/Shanghai') at time zone 'Asia/Shanghai', route, model
     ON CONFLICT (bucket_start, route, model)
     DO UPDATE SET
       total_tokens = EXCLUDED.total_tokens,
@@ -174,14 +174,14 @@ async function backfillDaily(startDate, endDate, dryRun) {
     console.log("🔍 [DRY RUN] 预览将要执行的操作...");
     const preview = await db.execute(sql`
       SELECT
-        DATE_TRUNC('day', occurred_at) as day_start,
+        date_trunc('day', occurred_at at time zone 'Asia/Shanghai') at time zone 'Asia/Shanghai' as day_start,
         route,
         model,
         COUNT(*) as record_count
       FROM usage_records
       WHERE occurred_at >= ${startDate}::date
         AND occurred_at < (${endDate}::date + INTERVAL '1 day')
-      GROUP BY DATE_TRUNC('day', occurred_at), route, model
+      GROUP BY date_trunc('day', occurred_at at time zone 'Asia/Shanghai') at time zone 'Asia/Shanghai', route, model
       ORDER BY day_start DESC
       LIMIT 10
     `);
@@ -210,7 +210,7 @@ async function backfillDaily(startDate, endDate, dryRun) {
       updated_at
     )
     SELECT
-      DATE_TRUNC('day', occurred_at) as day_start,
+      date_trunc('day', occurred_at at time zone 'Asia/Shanghai') at time zone 'Asia/Shanghai' as day_start,
       route,
       model,
       SUM(total_tokens)::bigint as total_tokens,
@@ -226,7 +226,7 @@ async function backfillDaily(startDate, endDate, dryRun) {
     FROM usage_records
     WHERE occurred_at >= ${startDate}::date
       AND occurred_at < (${endDate}::date + INTERVAL '1 day')
-    GROUP BY DATE_TRUNC('day', occurred_at), route, model
+    GROUP BY date_trunc('day', occurred_at at time zone 'Asia/Shanghai') at time zone 'Asia/Shanghai', route, model
     ON CONFLICT (day_start, route, model)
     DO UPDATE SET
       total_tokens = EXCLUDED.total_tokens,
@@ -249,7 +249,7 @@ async function main() {
 
   if (options.help) {
     printHelp();
-    process.exit(0);
+    return;
   }
 
   console.log("🚀 开始回填预聚合数据...");
@@ -260,7 +260,7 @@ async function main() {
     // 获取时间范围
     const dateRange = await getDateRange(options.from, options.to);
     if (!dateRange) {
-      process.exit(0);
+      return;
     }
 
     const { startDate, endDate } = dateRange;
@@ -280,12 +280,18 @@ async function main() {
     } else {
       console.log("\n✓ 回填完成！");
     }
-
-    process.exit(0);
   } catch (error) {
     console.error("❌ 回填失败:", error);
-    process.exit(1);
+    throw error;
+  } finally {
+    // 确保连接池关闭
+    await pool.end();
   }
 }
 
-main();
+main()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error("脚本执行失败:", err);
+    process.exit(1);
+  });

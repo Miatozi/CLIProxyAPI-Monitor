@@ -32,12 +32,18 @@ export function FullscreenContainer({ data }: FullscreenContainerProps) {
   if (!fullscreenChart) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 p-6 backdrop-blur-sm">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 p-6 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-label="全屏图表"
+    >
       <div className="relative w-full max-w-7xl">
         <button
           onClick={() => setFullscreenChart(null)}
           className="absolute -top-12 right-0 rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white"
           title="关闭 (ESC)"
+          aria-label="关闭全屏"
         >
           <X className="h-6 w-6" />
         </button>

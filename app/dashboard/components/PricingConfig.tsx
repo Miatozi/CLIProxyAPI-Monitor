@@ -119,7 +119,19 @@ export function PricingConfig({ onPriceChange }: PricingConfigProps) {
     };
 
     try {
-      // 如果模型名改变了，先删除旧模型
+      // 先 upsert 新模型（原子操作）
+      const res = await fetch("/api/prices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        console.error("保存失败");
+        return;
+      }
+
+      // 如果模型名改变了，且新模型保存成功后才删除旧模型
       if (editingPrice.model !== payload.model) {
         await fetch("/api/prices", {
           method: "DELETE",
@@ -128,20 +140,12 @@ export function PricingConfig({ onPriceChange }: PricingConfigProps) {
         });
       }
 
-      const res = await fetch("/api/prices", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+      setPrices((prev) => {
+        const others = prev.filter((p) => p.model !== editingPrice.model && p.model !== payload.model);
+        return [...others, payload].sort((a, b) => a.model.localeCompare(b.model));
       });
-
-      if (res.ok) {
-        setPrices((prev) => {
-          const others = prev.filter((p) => p.model !== editingPrice.model && p.model !== payload.model);
-          return [...others, payload].sort((a, b) => a.model.localeCompare(b.model));
-        });
-        setEditingPrice(null);
-        onPriceChange?.();
-      }
+      setEditingPrice(null);
+      onPriceChange?.();
     } catch (err) {
       console.error("保存失败", err);
     }
@@ -295,6 +299,7 @@ export function PricingConfig({ onPriceChange }: PricingConfigProps) {
                           : "text-slate-500 hover:bg-slate-200 hover:text-slate-900"
                       }`}
                       title="编辑"
+                      aria-label={`编辑 ${price.model} 的价格`}
                     >
                       <Pencil className="h-4 w-4" />
                     </button>
@@ -307,6 +312,7 @@ export function PricingConfig({ onPriceChange }: PricingConfigProps) {
                           : "text-red-500 hover:bg-red-100 hover:text-red-700"
                       }`}
                       title="删除"
+                      aria-label={`删除 ${price.model}`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>

@@ -21,12 +21,13 @@ export function ModelPieChart({ data, title, onMaximize }: ModelPieChartProps) {
   return (
     <div className="glass-panel rounded-lg p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-slate-100">{title}</h3>
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
         {onMaximize && (
           <button
             onClick={onMaximize}
             className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-700 hover:text-white"
             title="全屏查看"
+            aria-label={`全屏查看${title}`}
           >
             <Maximize2 className="h-4 w-4" />
           </button>
