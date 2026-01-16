@@ -37,8 +37,12 @@
     "tailwindcss": "^4.1.18",
     "typescript": "^5.4.5"
   },
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "pnpm": {
     "overrides": {
+      "esbuild": "0.25.12",
       "@types/react": "19.2.7",
       "@types/react-dom": "19.2.3"
     }
