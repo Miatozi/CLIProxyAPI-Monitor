@@ -34,6 +34,18 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Check database configuration
+        run: |
+          if [ -z "$DATABASE_URL" ] && [ -z "$POSTGRES_URL" ]; then
+            echo "❌ 错误: DATABASE_URL 和 POSTGRES_URL 都未设置"
+            echo "请在仓库 Settings > Secrets and variables > Actions 中配置 DATABASE_URL 或 POSTGRES_URL"
+            exit 1
+          fi
+          echo "✓ 数据库配置检查通过"
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+
       - name: Run migrations
         run: pnpm run db:migrate
         env:
