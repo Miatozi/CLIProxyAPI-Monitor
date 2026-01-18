@@ -6,7 +6,7 @@ import { DashboardClient } from "@/app/dashboard/components/DashboardClient";
 export const dynamic = "force-dynamic";
 
 interface PageProps {
-  searchParams: {
+  searchParams: Promise<{
     days?: string;
     start?: string;
     end?: string;
@@ -15,19 +15,22 @@ interface PageProps {
     page?: string;
     pageSize?: string;
     preagg?: string;
-  };
+  }>;
 }
 
 export default async function DashboardPage({ searchParams }: PageProps) {
+  // Next.js 15+ searchParams 是 Promise
+  const params = await searchParams;
+
   // 解析参数
-  const days = searchParams.days ? Number(searchParams.days) : undefined;
-  const start = searchParams.start;
-  const end = searchParams.end;
-  const model = searchParams.model;
-  const route = searchParams.route;
-  const page = searchParams.page ? Number(searchParams.page) : undefined;
-  const pageSize = searchParams.pageSize ? Number(searchParams.pageSize) : undefined;
-  const preaggParam = searchParams.preagg;
+  const days = params.days ? Number(params.days) : undefined;
+  const start = params.start;
+  const end = params.end;
+  const model = params.model;
+  const route = params.route;
+  const page = params.page ? Number(params.page) : undefined;
+  const pageSize = params.pageSize ? Number(params.pageSize) : undefined;
+  const preaggParam = params.preagg;
 
   // 预聚合开关逻辑
   const enablePreaggRead = process.env.ENABLE_PREAGG_READ !== "false";

@@ -11,7 +11,7 @@ type CachedExplore = {
 
 const EXPLORE_CACHE_TTL_MS = 30_000;
 const EXPLORE_CACHE_MAX_ENTRIES = 100;
-const CDN_CACHE_CONTROL = "s-maxage=30, stale-while-revalidate=60";
+const CDN_CACHE_CONTROL = "private, max-age=30, stale-while-revalidate=60";
 const exploreCache = new Map<string, CachedExplore>();
 
 function makeCacheKey(input: { days?: number; maxPoints?: number; start?: string | null; end?: string | null }) {

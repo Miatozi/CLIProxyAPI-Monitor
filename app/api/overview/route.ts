@@ -18,7 +18,7 @@ type CachedOverview = {
 
 const OVERVIEW_CACHE_TTL_MS = 30_000;
 const OVERVIEW_CACHE_MAX_ENTRIES = 100;
-const CDN_CACHE_CONTROL = "s-maxage=30, stale-while-revalidate=60";
+const CDN_CACHE_CONTROL = "private, max-age=30, stale-while-revalidate=60";
 const overviewCache = new Map<string, CachedOverview>();
 
 function makeCacheKey(input: { days?: number; model?: string | null; route?: string | null; page?: number; pageSize?: number; start?: string | null; end?: string | null; mode?: string }) {

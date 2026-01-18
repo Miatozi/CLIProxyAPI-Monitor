@@ -25,8 +25,17 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
     <>
       {/* Backdrop */}
       <div
+        role="button"
+        tabIndex={0}
+        aria-label="关闭导航菜单"
         className="fixed inset-0 z-40 bg-black/50 md:hidden"
         onClick={onClose}
+        onKeyDown={(e) => {
+          if (e.key === "Escape" || e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onClose();
+          }
+        }}
       />
 
       {/* Drawer */}
@@ -39,6 +48,7 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
           </div>
           <button
             onClick={onClose}
+            aria-label="关闭菜单"
             className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
           >
             <X className="h-5 w-5" />
