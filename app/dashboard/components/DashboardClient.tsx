@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { DashboardUIProvider, useDashboardUI } from "@/app/dashboard/context/DashboardUIContext";
 import { TrendChart, HourlyChart, ModelPieChart, CostTable } from "@/app/dashboard/components/LazyCharts";
 import { DashboardToolbar } from "@/app/dashboard/components/DashboardToolbar";
@@ -27,11 +28,13 @@ interface DashboardClientProps {
 
 function DashboardContent({ data }: { data: DashboardClientProps["initialData"] }) {
   const { setFullscreenChart } = useDashboardUI();
-  const [refreshing, setRefreshing] = useState(false);
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
   const handleRefresh = () => {
-    setRefreshing(true);
-    window.location.reload();
+    startTransition(() => {
+      router.refresh();
+    });
   };
 
   return (
@@ -42,7 +45,7 @@ function DashboardContent({ data }: { data: DashboardClientProps["initialData"] 
           modelOptions={data.filters?.models || []}
           routeOptions={data.filters?.routes || []}
           onRefresh={handleRefresh}
-          isRefreshing={refreshing}
+          isRefreshing={isPending}
         />
 
         {/* 趋势图 */}

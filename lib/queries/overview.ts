@@ -145,6 +145,20 @@ export async function getOverview(
     .limit(pageSize)
     .offset(offset);
 
+  // 用于计算总费用的查询（不受分页限制）
+  const allModelsForCostPromise: Promise<ModelAggRow[]> = db
+    .select({
+      model: usageRecords.model,
+      requests: sql<number>`sum(${usageRecords.totalRequests})`,
+      tokens: sql<number>`sum(${usageRecords.totalTokens})`,
+      inputTokens: sql<number>`sum(${usageRecords.inputTokens})`,
+      outputTokens: sql<number>`sum(${usageRecords.outputTokens})`,
+      cachedTokens: sql<number>`coalesce(sum(${usageRecords.cachedTokens}), 0)`
+    })
+    .from(usageRecords)
+    .where(filterWhere)
+    .groupBy(usageRecords.model);
+
   const byDayPromise: Promise<DayAggRow[]> = db
     .select({
       label: sql<string>`to_char(${dayExpr}, 'YYYY-MM-DD')`,
@@ -205,6 +219,7 @@ export async function getOverview(
     priceRows,
     totalModelsRowResult,
     byModelRows,
+    allModelsForCost,
     byDayRows,
     byDayModelRows,
     byHourRows,
@@ -215,6 +230,7 @@ export async function getOverview(
     pricePromise,
     totalModelsPromise,
     byModelPromise,
+    allModelsForCostPromise,
     byDayPromise,
     byDayModelPromise,
     byHourPromise,
@@ -282,7 +298,15 @@ export async function getOverview(
     cachedTokens: toNumber(row.cachedTokens)
   }));
 
-  const totalCost = models.reduce((acc, cur) => acc + cur.cost, 0);
+  // 使用所有模型数据计算总费用（不受分页限制）
+  const totalCost = allModelsForCost.reduce((acc, row) => {
+    const cost = estimateCost(
+      { inputTokens: toNumber(row.inputTokens), cachedTokens: toNumber(row.cachedTokens), outputTokens: toNumber(row.outputTokens) },
+      row.model,
+      prices
+    );
+    return acc + cost;
+  }, 0);
   const totalRequests = toNumber(totalsRow.totalRequests);
   const successCount = toNumber(totalsRow.successCount);
   const failureCount = toNumber(totalsRow.failureCount);

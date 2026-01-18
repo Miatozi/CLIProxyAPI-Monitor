@@ -175,6 +175,20 @@ async function getOverviewFromDailyAgg(
     .limit(pageSize)
     .offset(offset);
 
+  // 用于计算总费用的查询（不受分页限制）
+  const allModelsForCostPromise: Promise<ModelAggRow[]> = db
+    .select({
+      model: usageDailyAgg.model,
+      requests: sql<number>`sum(${usageDailyAgg.totalRequests})`,
+      tokens: sql<number>`sum(${usageDailyAgg.totalTokens})`,
+      inputTokens: sql<number>`sum(${usageDailyAgg.inputTokens})`,
+      outputTokens: sql<number>`sum(${usageDailyAgg.outputTokens})`,
+      cachedTokens: sql<number>`coalesce(sum(${usageDailyAgg.cachedTokens}), 0)`
+    })
+    .from(usageDailyAgg)
+    .where(filterWhere)
+    .groupBy(usageDailyAgg.model);
+
   const byDayPromise: Promise<DayAggRow[]> = db
     .select({
       label: sql<string>`to_char(${usageDailyAgg.dayStart} at time zone 'Asia/Shanghai', 'YYYY-MM-DD')`,
@@ -235,6 +249,7 @@ async function getOverviewFromDailyAgg(
     priceRows,
     totalModelsRowResult,
     byModelRows,
+    allModelsForCost,
     byDayRows,
     byDayModelRows,
     byHourRows,
@@ -245,6 +260,7 @@ async function getOverviewFromDailyAgg(
     pricePromise,
     totalModelsPromise,
     byModelPromise,
+    allModelsForCostPromise,
     byDayPromise,
     byDayModelPromise,
     byHourPromise,
@@ -257,6 +273,7 @@ async function getOverviewFromDailyAgg(
     priceRows,
     totalModelsRowResult,
     byModelRows,
+    allModelsForCost,
     byDayRows,
     byDayModelRows,
     byHourRows,
@@ -326,6 +343,20 @@ async function getOverviewFromHourlyAgg(
     .limit(pageSize)
     .offset(offset);
 
+  // 用于计算总费用的查询（不受分页限制）
+  const allModelsForCostPromise: Promise<ModelAggRow[]> = db
+    .select({
+      model: usageHourlyAgg.model,
+      requests: sql<number>`sum(${usageHourlyAgg.totalRequests})`,
+      tokens: sql<number>`sum(${usageHourlyAgg.totalTokens})`,
+      inputTokens: sql<number>`sum(${usageHourlyAgg.inputTokens})`,
+      outputTokens: sql<number>`sum(${usageHourlyAgg.outputTokens})`,
+      cachedTokens: sql<number>`coalesce(sum(${usageHourlyAgg.cachedTokens}), 0)`
+    })
+    .from(usageHourlyAgg)
+    .where(filterWhere)
+    .groupBy(usageHourlyAgg.model);
+
   const byDayPromise: Promise<DayAggRow[]> = db
     .select({
       label: sql<string>`to_char(${dayExpr}, 'YYYY-MM-DD')`,
@@ -386,6 +417,7 @@ async function getOverviewFromHourlyAgg(
     priceRows,
     totalModelsRowResult,
     byModelRows,
+    allModelsForCost,
     byDayRows,
     byDayModelRows,
     byHourRows,
@@ -396,6 +428,7 @@ async function getOverviewFromHourlyAgg(
     pricePromise,
     totalModelsPromise,
     byModelPromise,
+    allModelsForCostPromise,
     byDayPromise,
     byDayModelPromise,
     byHourPromise,
@@ -408,6 +441,7 @@ async function getOverviewFromHourlyAgg(
     priceRows,
     totalModelsRowResult,
     byModelRows,
+    allModelsForCost,
     byDayRows,
     byDayModelRows,
     byHourRows,
@@ -427,6 +461,7 @@ function buildOverviewResult(
   priceRows: PriceRow[],
   totalModelsRowResult: { count: number }[],
   byModelRows: ModelAggRow[],
+  allModelsForCost: ModelAggRow[],
   byDayRows: DayAggRow[],
   byDayModelRows: DayModelAggRow[],
   byHourRows: HourAggRow[],
@@ -496,7 +531,15 @@ function buildOverviewResult(
     cachedTokens: toNumber(row.cachedTokens)
   }));
 
-  const totalCost = models.reduce((acc, cur) => acc + cur.cost, 0);
+  // 使用所有模型数据计算总费用（不受分页限制）
+  const totalCost = allModelsForCost.reduce((acc, row) => {
+    const cost = estimateCost(
+      { inputTokens: toNumber(row.inputTokens), cachedTokens: toNumber(row.cachedTokens), outputTokens: toNumber(row.outputTokens) },
+      row.model,
+      prices
+    );
+    return acc + cost;
+  }, 0);
   const totalRequests = toNumber(totalsRow.totalRequests);
   const successCount = toNumber(totalsRow.successCount);
   const failureCount = toNumber(totalsRow.failureCount);
