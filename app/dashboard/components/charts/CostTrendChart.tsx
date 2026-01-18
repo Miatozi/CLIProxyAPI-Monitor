@@ -15,7 +15,7 @@ interface CostTrendChartProps {
 
 export default function CostTrendChart({ data }: CostTrendChartProps) {
   // 按时间和模型重组数据
-  const timeMap = new Map<string, Record<string, number>>();
+  const timeMap = new Map<string, Record<string, string | number>>();
   const models = new Set<string>();
 
   data.forEach((point) => {
@@ -64,7 +64,7 @@ export default function CostTrendChart({ data }: CostTrendChartProps) {
             borderRadius: "6px",
           }}
           labelStyle={{ color: "hsl(var(--popover-foreground))" }}
-          formatter={(value: number) => `$${value.toFixed(4)}`}
+          formatter={(value: number | undefined) => value != null ? `$${value.toFixed(4)}` : '-'}
         />
         <Legend />
         {Array.from(models).map((model) => (

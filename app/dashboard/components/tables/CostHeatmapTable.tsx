@@ -27,7 +27,7 @@ export default function CostHeatmapTable() {
         const overview = json.overview;
 
         // 按 route 分组
-        const routeMap = new Map<string, Record<string, number>>();
+        const routeMap = new Map<string, CostMatrixData>();
         const modelSet = new Set<string>();
 
         if (overview?.models) {

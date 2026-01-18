@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     if (interval === "day") {
       // 使用日聚合表
-      const bucketSql = sql`${usageDailyAgg.dayStart}::text`;
+      const bucketSql = sql<string>`${usageDailyAgg.dayStart}::text`;
 
       const results = await db
         .select({
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ data, hours, interval, model, route });
     } else {
       // 使用小时聚合表
-      const bucketSql = sql`${usageHourlyAgg.bucketStart}::text`;
+      const bucketSql = sql<string>`${usageHourlyAgg.bucketStart}::text`;
 
       const results = await db
         .select({
