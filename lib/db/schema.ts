@@ -52,7 +52,8 @@ export const usageHourlyAgg = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
   },
   (table) => ({
-    pk: primaryKey({ columns: [table.bucketStart, table.route, table.model] })
+    pk: primaryKey({ columns: [table.bucketStart, table.route, table.model] }),
+    bucketIdx: index("idx_hourly_agg_bucket").on(table.bucketStart)
   })
 );
 
@@ -75,7 +76,8 @@ export const usageDailyAgg = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
   },
   (table) => ({
-    pk: primaryKey({ columns: [table.dayStart, table.route, table.model] })
+    pk: primaryKey({ columns: [table.dayStart, table.route, table.model] }),
+    dayIdx: index("idx_daily_agg_day").on(table.dayStart)
   })
 );
 

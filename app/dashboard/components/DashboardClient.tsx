@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import { DashboardUIProvider, useDashboardUI } from "@/app/dashboard/context/DashboardUIContext";
 import { TrendChart, HourlyChart, ModelPieChart, CostTable } from "@/app/dashboard/components/LazyCharts";
 import { DashboardToolbar } from "@/app/dashboard/components/DashboardToolbar";
-import { PricingConfig } from "@/app/dashboard/components/PricingConfig";
 import { FullscreenContainer } from "@/app/dashboard/components/FullscreenContainer";
-import VitalsPanel from "@/app/dashboard/components/vitals/VitalsPanel";
-import TokenAnalyticsPanel from "@/app/dashboard/components/analytics/TokenAnalyticsPanel";
-import ErrorAnalyticsPanel from "@/app/dashboard/components/analytics/ErrorAnalyticsPanel";
+import {
+  VitalsPanel,
+  TokenAnalyticsPanel,
+  ErrorAnalyticsPanel,
+  PricingConfig
+} from "@/app/dashboard/components/LazyPanels";
 import type { UsageOverview } from "@/lib/types";
 
 interface DashboardClientProps {
