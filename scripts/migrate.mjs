@@ -38,6 +38,24 @@ async function runMigrations() {
       ON usage_records (route, occurred_at);
     `);
 
+    // 为 Web Vitals P75 查询优化（支持按页面+指标+时间筛选）
+    await db.execute(sql`
+      CREATE INDEX IF NOT EXISTS idx_vitals_perf
+      ON web_vitals (pathname, name, created_at);
+    `);
+
+    // 为 Token 分析优化（按模型+时间聚合）
+    await db.execute(sql`
+      CREATE INDEX IF NOT EXISTS idx_hourly_model_time
+      ON usage_hourly_agg (model, bucket_start);
+    `);
+
+    // 为成本分析优化（按路由+时间聚合）
+    await db.execute(sql`
+      CREATE INDEX IF NOT EXISTS idx_daily_route_time
+      ON usage_daily_agg (route, day_start);
+    `);
+
     console.log("✓ 索引创建完成");
   } catch (error) {
     console.error("迁移失败:", error);

@@ -7,6 +7,9 @@ import { TrendChart, HourlyChart, ModelPieChart, CostTable } from "@/app/dashboa
 import { DashboardToolbar } from "@/app/dashboard/components/DashboardToolbar";
 import { PricingConfig } from "@/app/dashboard/components/PricingConfig";
 import { FullscreenContainer } from "@/app/dashboard/components/FullscreenContainer";
+import VitalsPanel from "@/app/dashboard/components/vitals/VitalsPanel";
+import TokenAnalyticsPanel from "@/app/dashboard/components/analytics/TokenAnalyticsPanel";
+import ErrorAnalyticsPanel from "@/app/dashboard/components/analytics/ErrorAnalyticsPanel";
 import type { UsageOverview } from "@/lib/types";
 
 interface DashboardClientProps {
@@ -47,6 +50,15 @@ function DashboardContent({ data }: { data: DashboardClientProps["initialData"] 
           onRefresh={handleRefresh}
           isRefreshing={isPending}
         />
+
+        {/* Web Vitals 性能监控 */}
+        <VitalsPanel />
+
+        {/* Token 与成本分析 */}
+        <TokenAnalyticsPanel />
+
+        {/* 错误深度分析 */}
+        <ErrorAnalyticsPanel />
 
         {/* 趋势图 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
